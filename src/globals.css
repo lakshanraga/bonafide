@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    height: 100%; /* Ensure html, body, and root div take full height */
+  }
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+
+    /* --- THEME: TUTOR --- */
+    --tutor-sidebar-background: 215 40% 25%; /* These will be overridden by gradient */
+    --tutor-sidebar-foreground: 210 40% 98%;
+    --tutor-sidebar-muted-foreground: 215 20.2% 75.1%;
+    --tutor-sidebar-active-background: 210 40% 96.1%;
+    --tutor-sidebar-active-foreground: 215 40% 25%;
+    --tutor-sidebar-border: 215 40% 20%;
+    --tutor-header-background: 0 0% 100%; /* Made solid */
+
+    /* --- THEME: ADMIN --- */
+    --admin-sidebar-background: 220 13% 15%; /* These will be overridden by gradient */
+    --admin-sidebar-foreground: 210 40% 98%;
+    --admin-sidebar-muted-foreground: 215 20.2% 65.1%;
+    --admin-sidebar-active-background: 224.3 76.3% 48%;
+    --admin-sidebar-active-foreground: 210 40% 98%;
+    --admin-sidebar-border: 217.2 32.6% 17.5%;
+    --admin-header-background: 0 0% 100%; /* Made solid */
+    --admin-card-background: 0 0% 100%;
+
+    /* --- THEME: STUDENT --- */
+    --student-sidebar-background-start: 250 60% 15%; /* These will be overridden by gradient */
+    --student-sidebar-background-end: 220 70% 25%;
+    --student-sidebar-foreground: 220 20% 95%;
+    --student-sidebar-muted-foreground: 220 15% 65%;
+    --student-sidebar-active-background: 0 0% 100%;
+    --student-sidebar-active-foreground: 240 10% 3.9%;
+    --student-sidebar-border: 240 3.7% 15.9%;
+    --student-header-background: 0 0% 100%; /* Made solid */
+
+    /* --- THEME: HOD --- */
+    --hod-sidebar-background: 220 15% 20%; /* These will be overridden by gradient */
+    --hod-sidebar-foreground: 210 40% 98%;
+    --hod-sidebar-muted-foreground: 215 20.2% 65.1%;
+    --hod-sidebar-active-background: 170 60% 40%;
+    --hod-sidebar-active-foreground: 210 40% 98%;
+    --hod-sidebar-border: 220 15% 15%;
+    --hod-header-background: 0 0% 100%; /* Made solid */
+
+    /* --- THEME: PRINCIPAL --- */
+    --principal-sidebar-background: 240 10% 3.9%; /* These will be overridden by gradient */
+    --principal-sidebar-foreground: 210 40% 98%;
+    --principal-sidebar-muted-foreground: 215 20.2% 65.1%;
+    --principal-sidebar-active-background: 35 80% 50%;
+    --principal-sidebar-active-foreground: 240 10% 3.9%;
+    --principal-sidebar-border: 240 3.7% 15.9%;
+    --principal-header-background: 0 0% 100%; /* Made solid */
+
+    /* Custom colors for login button hover effect */
+    --lighter-dark-shade: 225 20% 20%; /* HSL equivalent of #222b45 */
+    --dark-blue-hover: 220 80% 40%; /* New dark blue color */
+
+    /* New Dashboard Gradient Colors */
+    --dashboard-gradient-violet: 270 80% 40%;
+    --dashboard-gradient-blue: 220 80% 30%;
+    --dashboard-gradient-cyan: 180 70% 60%;
+    --dashboard-gradient-lavender: 270 60% 70%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    /* --- DARK THEMES --- */
+    --header-background: 222.2 84% 4.9%; /* Made solid */
+    --admin-header-background: 222.2 84% 4.9%; /* Made solid */
+    --admin-card-background: 217.2 32.6% 17.5%;
+    --student-header-background: 222.2 84% 4.9%; /* Made solid */
+    --tutor-header-background: 222.2 84% 4.9%; /* Made solid */
+    --hod-header-background: 222.2 84% 4.9%; /* Made solid */
+    --principal-header-background: 222.2 84% 4.9%; /* Made solid */
+
+    /* Custom colors for login button hover effect */
+    --lighter-dark-shade: 225 20% 20%; /* HSL equivalent of #222b45 */
+    --dark-blue-hover: 220 80% 40%; /* New dark blue color */
+
+    /* New Dashboard Gradient Colors (Dark Mode) */
+    --dashboard-gradient-violet: 270 60% 25%;
+    --dashboard-gradient-blue: 220 60% 20%;
+    --dashboard-gradient-cyan: 180 50% 30%;
+    --dashboard-gradient-lavender: 270 40% 35%;
+  }
+
+  .dark[data-student-theme='sunset'] {
+    --student-sidebar-background-start: 20 80% 40%;
+    --student-sidebar-background-end: 350 70% 35%;
+  }
+
+  .dark[data-student-theme='ocean'] {
+    --student-sidebar-background-start: 215 70% 40%;
+    --student-sidebar-background-end: 185 65% 35%;
+  }
+
+  .dark[data-student-theme='forest'] {
+    --student-sidebar-background-start: 145 50% 30%;
+    --student-sidebar-background-end: 150 60% 20%;
+  }
+}
+
+@layer components {
+  .admin-layout-theme {
+    --card: hsl(var(--admin-card-background));
+  }
+  /* New universal sidebar gradient */
+  .bg-sidebar-gradient {
+    background: linear-gradient(
+      135deg, /* From top-left to bottom-right */
+      hsl(var(--dashboard-gradient-violet)) 0%,
+      hsl(var(--dashboard-gradient-blue)) 35%,
+      hsl(var(--dashboard-gradient-cyan)) 70%,
+      hsl(var(--dashboard-gradient-lavender)) 100%
+    );
+  }
+
+  .glass-card {
+    @apply bg-card/60 backdrop-blur-lg border border-white/20 shadow-lg;
+  }
+  .dark .glass-card {
+    @apply bg-card/30 backdrop-blur-lg border border-white/10 shadow-lg;
+  }
+
+  /* New wavy background for main content */
+  .wavy-background {
+    background-color: hsl(var(--background)); /* Base background color */
+    background-image:
+      radial-gradient(at 20% 70%, hsl(var(--muted)) 0%, transparent 60%),
+      radial-gradient(at 80% 30%, hsl(var(--muted)) 0%, transparent 60%);
+    background-size: 150% 150%; /* Larger than container */
+    background-repeat: no-repeat;
+    animation: subtle-flow 25s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes subtle-flow {
+  0% {
+    background-position: 0% 0%, 100% 100%;
+  }
+  100% {
+    background-position: 100% 100%, 0% 0%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
