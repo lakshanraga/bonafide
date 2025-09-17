@@ -229,3 +229,18 @@
     transform: scaleX(1);
   }
 }
+
+@keyframes sidebar-blow-up {
+  0% {
+    transform: scale(0.95) translateX(-10px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateX(0);
+    opacity: 1;
+  }
+}

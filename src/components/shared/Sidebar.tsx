@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, ChevronLeft, ChevronRight } from "lucide-react";
 import { NavItem } from "@/lib/types";
@@ -15,17 +16,24 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ navItems, portalName, variant = 'default', isCollapsed = false, toggleCollapse }: SidebarProps) => {
+  const [animate, setAnimate] = useState(false);
+
+  useEffect(() => {
+    // Trigger animation on mount
+    setAnimate(true);
+  }, []);
   // Determine text color based on variant and theme
   const isStudent = variant === 'student';
   const isDark = document.documentElement.classList.contains('dark');
   
-  // Use white text for student theme, and light text for dark mode, dark text for light mode
-  const textColorClass = isStudent ? "text-white" : (isDark ? "text-primary-foreground" : "text-white");
+  // Ensure text is always visible - use white text in all cases for maximum contrast
+  const textColorClass = "text-white";
 
   return (
     <aside className={cn(
-      "hidden md:flex md:flex-col border-r transition-all duration-300 ease-in-out relative h-full bg-sidebar-gradient",
+      "hidden md:flex md:flex-col border-r transition-all duration-500 ease-out relative h-full bg-sidebar-gradient",
       isCollapsed ? "md:w-20" : "md:w-64",
+      animate ? "animate-sidebar-blow-up" : ""
     )}>
       <div className={cn(
         "flex h-14 items-center border-b px-6",

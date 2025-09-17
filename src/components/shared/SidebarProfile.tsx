@@ -25,15 +25,15 @@ const SidebarProfile = ({ isCollapsed, textColorClass }: SidebarProfileProps) =>
       <Avatar className="h-9 w-9">
         <AvatarImage src={profile.avatar_url} alt={profile.username} />
         <AvatarFallback>
-          <UserIcon className={cn("h-5 w-5", textColorClass || "text-white")} />
+          <UserIcon className={cn("h-5 w-5", "text-white")} />
         </AvatarFallback>
       </Avatar>
       {!isCollapsed && (
         <div className="ml-3 overflow-hidden">
-          <p className={cn("text-sm font-medium truncate", textColorClass || "text-white")}>
+          <p className={cn("text-sm font-medium truncate", "text-white")}>
             {profile.first_name} {profile.last_name}
           </p>
-          <p className={cn("text-xs truncate", textColorClass ? `${textColorClass}/70` : "text-white/70")}>
+          <p className={cn("text-xs truncate", "text-white/70")}>
             {profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}
           </p>
         </div>
