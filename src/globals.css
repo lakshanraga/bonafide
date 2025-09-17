@@ -216,21 +216,21 @@
   
   /* Enhanced text contrast for charcoal background */
   .wavy-background {
-    color: #ffffff; /* White text for charcoal background */
+    color: #000000; /* Black text for light mode on charcoal background */
   }
   
   /* Ensure proper text visibility in light mode */
   .wavy-background * {
-    color: #ffffff !important; /* Force white text on charcoal background */
+    color: #000000 !important; /* Force black text in light mode */
   }
   
   /* Dark mode text styling */
   .dark .wavy-background {
-    color: #ffffff;
+    color: #ffffff; /* White text for dark mode */
   }
   
   .dark .wavy-background * {
-    color: #ffffff !important;
+    color: #ffffff !important; /* Force white text in dark mode */
   }
   
   .wavy-background h1,
@@ -239,16 +239,35 @@
   .wavy-background h4,
   .wavy-background h5,
   .wavy-background h6 {
-    color: #ffffff !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    color: #000000 !important; /* Black text for light mode */
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.3); /* Light shadow for light mode */
   }
   
-  /* Ensure all text elements are visible */
+  /* Dark mode headings */
+  .dark .wavy-background h1,
+  .dark .wavy-background h2,
+  .dark .wavy-background h3,
+  .dark .wavy-background h4,
+  .dark .wavy-background h5,
+  .dark .wavy-background h6 {
+    color: #ffffff !important; /* White text for dark mode */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); /* Dark shadow for dark mode */
+  }
+  
+  /* Ensure all text elements are visible in light mode */
   .wavy-background p,
   .wavy-background span,
   .wavy-background div,
   .wavy-background label {
-    color: #ffffff !important;
+    color: #000000 !important; /* Black text for light mode */
+  }
+  
+  /* Dark mode text elements */
+  .dark .wavy-background p,
+  .dark .wavy-background span,
+  .dark .wavy-background div,
+  .dark .wavy-background label {
+    color: #ffffff !important; /* White text for dark mode */
   }
 }
 
