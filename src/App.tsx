@@ -7,7 +7,7 @@ import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { SessionContextProvider, useSession } from "@/components/auth/SessionContextProvider";
-// import ThemePreferenceDialog from "@/components/shared/ThemePreferenceDialog"; // Removed import
+import { ColorThemeProvider } from "@/components/shared/ColorThemeProvider"; // New import
 
 import StudentLayout from "./components/layouts/StudentLayout";
 import StudentDashboard from "./pages/student/Dashboard";
@@ -89,80 +89,80 @@ const ProtectedRoute = ({ allowedRoles }: { allowedRoles: string[] }) => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <TooltipProvider>
-        {/* Removed shadcn/ui Toaster, using Sonner exclusively */}
-        <Sonner />
-        <BrowserRouter>
-          <SessionContextProvider>
-            {/* <ThemePreferenceDialog /> Removed the theme preference dialog */}
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<AuthPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/contact" element={<ContactPage />} />
+      <ColorThemeProvider> {/* Wrap with ColorThemeProvider */}
+        <TooltipProvider>
+          <Sonner />
+          <BrowserRouter>
+            <SessionContextProvider>
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<AuthPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/contact" element={<ContactPage />} />
 
-              {/* Student Routes */}
-              <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
-                <Route element={<StudentLayout />}>
-                  <Route path="/student/dashboard" element={<StudentDashboard />} />
-                  <Route path="/student/request" element={<NewRequest />} />
-                  <Route path="/student/my-requests" element={<MyRequests />} />
-                  <Route path="/student/profile" element={<StudentProfile />} />
+                {/* Student Routes */}
+                <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
+                  <Route element={<StudentLayout />}>
+                    <Route path="/student/dashboard" element={<StudentDashboard />} />
+                    <Route path="/student/request" element={<NewRequest />} />
+                    <Route path="/student/my-requests" element={<MyRequests />} />
+                    <Route path="/student/profile" element={<StudentProfile />} />
+                  </Route>
                 </Route>
-              </Route>
 
-              {/* Tutor Routes */}
-              <Route element={<ProtectedRoute allowedRoles={["tutor"]} />}>
-                <Route element={<TutorLayout />}>
-                  <Route path="/tutor/dashboard" element={<TutorDashboard />} />
-                  <Route path="/tutor/pending-requests" element={<TutorPendingRequests />} />
-                  <Route path="/tutor/request-history" element={<TutorRequestHistory />} />
-                  <Route path="/tutor/students" element={<TutorStudents />} />
-                  <Route path="/tutor/profile" element={<TutorProfile />} />
+                {/* Tutor Routes */}
+                <Route element={<ProtectedRoute allowedRoles={["tutor"]} />}>
+                  <Route element={<TutorLayout />}>
+                    <Route path="/tutor/dashboard" element={<TutorDashboard />} />
+                    <Route path="/tutor/pending-requests" element={<TutorPendingRequests />} />
+                    <Route path="/tutor/request-history" element={<TutorRequestHistory />} />
+                    <Route path="/tutor/students" element={<TutorStudents />} />
+                    <Route path="/tutor/profile" element={<TutorProfile />} />
+                  </Route>
                 </Route>
-              </Route>
 
-              {/* HOD Routes */}
-              <Route element={<ProtectedRoute allowedRoles={["hod"]} />}>
-                <Route element={<HodLayout />}>
-                  <Route path="/hod/dashboard" element={<HodDashboard />} />
-                  <Route path="/hod/pending-requests" element={<HodPendingRequests />} />
-                  <Route path="/hod/request-history" element={<HodRequestHistory />} />
-                  <Route path="/hod/profile" element={<HodProfile />} />
+                {/* HOD Routes */}
+                <Route element={<ProtectedRoute allowedRoles={["hod"]} />}>
+                  <Route element={<HodLayout />}>
+                    <Route path="/hod/dashboard" element={<HodDashboard />} />
+                    <Route path="/hod/pending-requests" element={<HodPendingRequests />} />
+                    <Route path="/hod/request-history" element={<HodRequestHistory />} />
+                    <Route path="/hod/profile" element={<HodProfile />} />
+                  </Route>
                 </Route>
-              </Route>
 
-              {/* Admin Routes */}
-              <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-                <Route element={<AdminLayout />}>
-                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                  <Route path="/admin/manage-faculties" element={<ManageFaculties />} />
-                  <Route path="/admin/manage-tutors" element={<ManageTutors />} />
-                  <Route path="/admin/student-management" element={<StudentManagement />} />
-                  <Route path="/admin/batch-management" element={<BatchManagement />} />
-                  <Route path="/admin/department-management" element={<DepartmentManagement />} />
-                  <Route path="/admin/template-management" element={<TemplateManagement />} />
-                  <Route path="/admin/profile" element={<AdminProfile />} />
+                {/* Admin Routes */}
+                <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+                  <Route element={<AdminLayout />}>
+                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                    <Route path="/admin/manage-faculties" element={<ManageFaculties />} />
+                    <Route path="/admin/manage-tutors" element={<ManageTutors />} />
+                    <Route path="/admin/student-management" element={<StudentManagement />} />
+                    <Route path="/admin/batch-management" element={<BatchManagement />} />
+                    <Route path="/admin/department-management" element={<DepartmentManagement />} />
+                    <Route path="/admin/template-management" element={<TemplateManagement />} />
+                    <Route path="/admin/profile" element={<AdminProfile />} />
+                  </Route>
                 </Route>
-              </Route>
 
-              {/* Principal Routes */}
-              <Route element={<ProtectedRoute allowedRoles={["principal"]} />}>
-                <Route element={<PrincipalLayout />}>
-                  <Route path="/principal/dashboard" element={<PrincipalDashboard />} />
-                  <Route path="/principal/pending-requests" element={<PrincipalPendingRequests />} />
-                  <Route path="/principal/request-history" element={<PrincipalRequestHistory />} />
-                  <Route path="/principal/department-overview" element={<DepartmentOverview />} />
-                  <Route path="/principal/profile" element={<PrincipalProfile />} />
+                {/* Principal Routes */}
+                <Route element={<ProtectedRoute allowedRoles={["principal"]} />}>
+                  <Route element={<PrincipalLayout />}>
+                    <Route path="/principal/dashboard" element={<PrincipalDashboard />} />
+                    <Route path="/principal/pending-requests" element={<PrincipalPendingRequests />} />
+                    <Route path="/principal/request-history" element={<PrincipalRequestHistory />} />
+                    <Route path="/principal/department-overview" element={<DepartmentOverview />} />
+                    <Route path="/principal/profile" element={<PrincipalProfile />} />
+                  </Route>
                 </Route>
-              </Route>
 
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </SessionContextProvider>
-        </BrowserRouter>
-      </TooltipProvider>
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </SessionContextProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ColorThemeProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

@@ -100,3 +100,5 @@ export interface NavItem {
   href: string;
   icon: React.ReactNode;
 }
+
+export type ColorVariant = "default" | "blue" | "green"; // New type for color variants
