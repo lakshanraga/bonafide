@@ -67,6 +67,9 @@ const CustomLoginForm = () => {
                   id="email"
                   type="email"
                   placeholder="m@example.com"
+                  className="enhanced-input transition-all duration-300 hover:border-primary/50
+                             focus:ring-4 focus:ring-primary/20 focus:border-primary
+                             hover:shadow-md"
                   {...field}
                   disabled={loading}
                 />
@@ -86,6 +89,9 @@ const CustomLoginForm = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
+                    className="enhanced-input pr-12 transition-all duration-300 hover:border-primary/50
+                               focus:ring-4 focus:ring-primary/20 focus:border-primary
+                               hover:shadow-md"
                     {...field}
                     disabled={loading}
                   />
@@ -93,14 +99,16 @@ const CustomLoginForm = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-primary/10
+                               transition-all duration-200 hover:scale-110 focus:scale-105
+                               group hover:shadow-sm"
                     onClick={() => setShowPassword((prev) => !prev)}
                     disabled={loading}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
                     )}
                     <span className="sr-only">Toggle password visibility</span>
                   </Button>
@@ -113,12 +121,41 @@ const CustomLoginForm = () => {
         <Button
           type="submit"
           className="w-full rounded-md font-semibold transition-all duration-300 ease-in-out
-                     bg-primary text-primary-foreground
-                     hover:bg-primary/90 hover:shadow-lg hover:scale-[1.02] hover:-translate-y-0.5"
+                     bg-primary text-primary-foreground relative overflow-hidden group
+                     hover:bg-primary/90 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1
+                     active:scale-[0.98] active:translate-y-0
+                     before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent
+                     before:translate-x-[-100%] before:transition-transform before:duration-700
+                     hover:before:translate-x-[100%]
+                     focus:ring-4 focus:ring-primary/30 focus:outline-none"
           disabled={loading}
         >
-          {loading ? "Logging in..." : "Login"}
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            {loading ? "Logging in..." : "Login"}
+            {!loading && (
+              <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">
+                →
+              </span>
+            )}
+          </span>
         </Button>
+        
+        {/* Forgot Password Link */}
+        <div className="text-center mt-4">
+          <Button
+            type="button"
+            variant="link"
+            className="text-sm text-muted-foreground hover:text-primary transition-all duration-300
+                       hover:scale-105 hover:underline p-0 h-auto font-medium
+                       focus:ring-2 focus:ring-primary/30 focus:outline-none rounded"
+            onClick={() => {
+              // Add forgot password functionality here
+              showError("Forgot password functionality not implemented yet.");
+            }}
+          >
+            Forgot your password?
+          </Button>
+        </div>
       </form>
     </Form>
   );

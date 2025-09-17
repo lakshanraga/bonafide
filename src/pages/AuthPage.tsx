@@ -53,9 +53,18 @@ const AuthPage = () => {
 
       {/* Back button */}
       <div className="absolute top-4 left-4 z-20">
-        <Button variant="ghost" size="icon" asChild className="text-white hover:bg-white/20">
-          <Link to="/">
-            <ArrowLeft className="h-6 w-6" />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          asChild 
+          className="text-white hover:bg-white/20 transition-all duration-300
+                     hover:scale-110 hover:shadow-lg hover:-translate-y-1
+                     active:scale-105 active:translate-y-0
+                     focus:ring-4 focus:ring-white/30 focus:outline-none
+                     backdrop-blur-sm bg-black/10 border border-white/20"
+        >
+          <Link to="/" className="flex items-center justify-center">
+            <ArrowLeft className="h-6 w-6 transition-transform duration-300 group-hover:-translate-x-1" />
             <span className="sr-only">Back to Home</span>
           </Link>
         </Button>
