@@ -7,6 +7,7 @@ import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { SessionContextProvider, useSession } from "@/components/auth/SessionContextProvider";
+import ThemePreferenceDialog from "@/components/shared/ThemePreferenceDialog"; // Import the new component
 
 import StudentLayout from "./components/layouts/StudentLayout";
 import StudentDashboard from "./pages/student/Dashboard";
@@ -93,6 +94,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <SessionContextProvider>
+            <ThemePreferenceDialog /> {/* Render the theme preference dialog here */}
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<AuthPage />} />
