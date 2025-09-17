@@ -125,6 +125,14 @@
     --dashboard-gradient-blue: 220 60% 20%;
     --dashboard-gradient-cyan: 180 50% 30%;
     --dashboard-gradient-lavender: 270 40% 35%;
+
+    /* Example of a new custom dark-mode-only class */
+    .dark-only-highlight {
+      background-color: hsl(var(--accent));
+      color: hsl(var(--accent-foreground));
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+    }
   }
 
   .dark[data-student-theme='sunset'] {
