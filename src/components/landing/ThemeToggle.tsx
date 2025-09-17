@@ -29,7 +29,9 @@ export function ThemeToggle() {
     );
   }
 
-  const currentTheme = theme === 'system' ? systemTheme : theme;
+  // The currentTheme logic is no longer strictly needed for display if 'system' is removed from options,
+  // but keeping it doesn't hurt.
+  // const currentTheme = theme === 'system' ? systemTheme : theme;
 
   return (
     <DropdownMenu>
@@ -53,12 +55,7 @@ export function ThemeToggle() {
         >
           🌙 Dark
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setTheme("system")}
-          className={theme === "system" ? "bg-accent" : ""}
-        >
-          💻 System
-        </DropdownMenuItem>
+        {/* Removed System option */}
       </DropdownMenuContent>
     </DropdownMenu>
   );

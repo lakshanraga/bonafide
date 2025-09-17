@@ -47,9 +47,7 @@ export function ThemeToggle({ onHeaderBg, iconTextColorClass }: ThemeToggleProps
         <DropdownMenuItem onClick={() => setTheme("dark")}>
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          System
-        </DropdownMenuItem>
+        {/* Removed System option */}
       </DropdownMenuContent>
     </DropdownMenu>
   )
