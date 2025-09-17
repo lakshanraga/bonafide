@@ -114,6 +114,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
           }
         }
       } else {
+        console.log("Supabase onAuthStateChange: Session is null. Clearing profile.");
         setProfile(null);
         // Do NOT navigate to /login here. The landing page is the default unauthenticated view.
         // ProtectedRoute will handle redirects to /login if a protected route is accessed.
@@ -143,21 +144,16 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
   const signOut = async () => {
     console.log("Attempting to sign out...");
-    console.log("Current session before signOut:", session); // Log current session
+    console.log("Current session before signOut:", session);
 
     const { error } = await supabase.auth.signOut();
 
     if (error) {
       console.error('Supabase signOut error:', error);
       showError('Logout failed: ' + error.message);
-      // If the error is "auto session missing", it might mean the session is already gone
-      // from Supabase's perspective, but local storage might still hold stale tokens.
-      // In this case, we proceed to clear client-side state anyway.
-      if (error.message.includes("auto session missing")) {
-        console.warn("Supabase reported 'auto session missing'. Proceeding with client-side state clear.");
-      } else {
-        // If it's another type of error, we might want to stop here.
-        return;
+      // Even if signOut fails, we want to clear client-side state and navigate.
+      if (error.message.includes("Auth session missing")) {
+        console.warn("Supabase reported 'Auth session missing'. Proceeding with client-side state clear.");
       }
     } else {
       console.log("Supabase signOut successful.");
