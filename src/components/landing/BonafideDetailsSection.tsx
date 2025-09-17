@@ -7,19 +7,19 @@ import { CheckCircle, FileText, Info, ListOrdered, Users } from "lucide-react";
 const BonafideDetailsSection = () => {
   const details = [
     {
-      icon: <Info className="h-6 w-6 text-blue-500" />,
+      icon: <Info className="h-6 w-6 text-primary" />,
       title: "What is a Bonafide Certificate?",
       description:
         "A Bonafide Certificate is an official document issued by the college confirming that an individual is a genuine student of the institution during a specified period. It serves as proof of enrollment and student status.",
     },
     {
-      icon: <Users className="h-6 w-6 text-green-500" />,
+      icon: <Users className="h-6 w-6 text-primary" />,
       title: "Purpose and Uses",
       description:
         "This certificate is commonly required for various purposes such as applying for scholarships, educational loans, internships, passport applications, visa applications, opening bank accounts, or for any other official verification of student status.",
     },
     {
-      icon: <ListOrdered className="h-6 w-6 text-purple-500" />,
+      icon: <ListOrdered className="h-6 w-6 text-primary" />,
       title: "How to Apply",
       description: (
         <ul className="list-disc list-inside space-y-1">
@@ -32,7 +32,7 @@ const BonafideDetailsSection = () => {
       ),
     },
     {
-      icon: <FileText className="h-6 w-6 text-red-500" />,
+      icon: <FileText className="h-6 w-6 text-primary" />,
       title: "Required Documents",
       description: (
         <ul className="list-disc list-inside space-y-1">
@@ -44,7 +44,7 @@ const BonafideDetailsSection = () => {
       ),
     },
     {
-      icon: <CheckCircle className="h-6 w-6 text-yellow-500" />,
+      icon: <CheckCircle className="h-6 w-6 text-primary" />,
       title: "Processing Time",
       description:
         "The certificate is typically processed within 3-5 working days from the date of application submission. Students will be notified once the certificate is ready for collection.",

@@ -87,7 +87,7 @@ const HodDashboard = () => {
           title="Pending Requests"
           value={pendingRequests.toString()}
           icon={<FileClock />}
-          iconColor="text-red-500"
+          iconColor="text-primary"
         />
         <DashboardCard
           title="Total Students"

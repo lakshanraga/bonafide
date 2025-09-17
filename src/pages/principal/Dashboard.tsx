@@ -92,19 +92,19 @@ const PrincipalDashboard = () => {
           title="Total Students"
           value={totalStudents.toString()}
           icon={<Users />}
-          iconColor="text-blue-500"
+          iconColor="text-primary"
         />
         <DashboardCard
           title="Total Staff"
           value={totalStaff.toString()}
           icon={<Briefcase />}
-          iconColor="text-green-500"
+          iconColor="text-primary"
         />
         <DashboardCard
           title="Pending Requests"
           value={pendingRequests.toString()}
           icon={<FileClock />}
-          iconColor="text-yellow-500"
+          iconColor="text-primary"
         />
         <DashboardCard
           title="Total Departments"

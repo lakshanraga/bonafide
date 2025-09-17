@@ -115,11 +115,11 @@ const ContactSection = () => {
                     <img src="/x-logo.webp" alt="X logo" className="h-6 w-6 dark:invert" />
                     <span className="sr-only">X (formerly Twitter)</span>
                   </a>
-                  <a href="https://www.facebook.com/AdhiyamaanCollegeofEngineering" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 transition-colors">
+                  <a href="https://www.facebook.com/AdhiyamaanCollegeofEngineering" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-colors">
                     <Facebook className="h-6 w-6" />
                     <span className="sr-only">Facebook</span>
                   </a>
-                  <a href="https://www.linkedin.com/school/adhiyamaan-college-of-engineering/" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:text-blue-800 transition-colors">
+                  <a href="https://www.linkedin.com/school/adhiyamaan-college-of-engineering/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition-colors">
                     <Linkedin className="h-6 w-6" />
                     <span className="sr-only">LinkedIn</span>
                   </a>
