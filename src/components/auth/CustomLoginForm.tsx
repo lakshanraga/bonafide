@@ -112,10 +112,9 @@ const CustomLoginForm = () => {
         />
         <Button
           type="submit"
-          className="w-full rounded-md font-bold transition-all duration-300 ease-in-out
+          className="w-full rounded-md font-semibold transition-all duration-300 ease-in-out
                      bg-primary text-primary-foreground
-                     hover:bg-lighter-dark-shade hover:text-dark-blue-hover
-                     hover:shadow-[0_0_20px_hsl(var(--dark-blue-hover)/0.5)] hover:scale-[1.04] hover:-translate-y-0.5"
+                     hover:bg-primary/90 hover:shadow-lg hover:scale-[1.02] hover:-translate-y-0.5"
           disabled={loading}
         >
           {loading ? "Logging in..." : "Login"}
