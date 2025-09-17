@@ -142,10 +142,13 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   }, [fetchUserProfileAndRedirect, navigate, profile]); // Added profile to dependency array
 
   const signOut = async () => {
+    console.log("Attempting to sign out...");
     const { error } = await supabase.auth.signOut();
     if (error) {
+      console.error('Logout failed:', error);
       showError('Logout failed: ' + error.message);
     } else {
+      console.log("Logged out successfully, updating state and navigating.");
       showSuccess('Logged out successfully!');
       setSession(null);
       setUser(null);
