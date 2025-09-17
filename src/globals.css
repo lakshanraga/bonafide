@@ -86,9 +86,9 @@
     --dashboard-gradient-lavender: 260 30% 45%;
     
     /* Deep Teal Main Background Variables */
-    --main-background-teal: 180 100% 15%; /* #004d4d in HSL */
-    --main-background-teal-light: 180 100% 20%;
-    --main-background-teal-accent: 180 100% 25%;
+    --main-background-charcoal: 210 15% 25%; /* #36454F in HSL */
+    --main-background-charcoal-light: 210 15% 30%;
+    --main-background-charcoal-accent: 210 15% 35%;
   }
 
   .dark {
@@ -132,9 +132,9 @@
     --dashboard-gradient-lavender: 260 30% 25%;
     
     /* Deep Teal Main Background Variables (Dark Mode) */
-    --main-background-teal: 180 100% 10%; /* Even deeper for dark mode */
-    --main-background-teal-light: 180 100% 15%;
-    --main-background-teal-accent: 180 100% 20%;
+    --main-background-charcoal: 210 15% 20%; /* Even deeper for dark mode */
+    --main-background-charcoal-light: 210 15% 25%;
+    --main-background-charcoal-accent: 210 15% 30%;
 
     /* Example of a new custom dark-mode-only class */
     .dark-only-highlight {
@@ -193,28 +193,28 @@
     transform-origin: center;
   }
 
-  /* New wavy background for main content with deep teal */
+  /* New wavy background for main content with charcoal gray */
   .wavy-background {
-    background-color: #004d4d; /* Deep teal base background */
+    background-color: #36454F; /* Charcoal gray base background */
     background-image:
-      radial-gradient(at 15% 80%, rgba(0, 102, 102, 0.3) 0%, transparent 50%),
-      radial-gradient(at 85% 20%, rgba(0, 77, 77, 0.4) 0%, transparent 50%),
-      radial-gradient(at 50% 50%, rgba(0, 128, 128, 0.2) 0%, transparent 40%);
+      radial-gradient(at 15% 80%, rgba(60, 75, 85, 0.3) 0%, transparent 50%),
+      radial-gradient(at 85% 20%, rgba(45, 60, 70, 0.4) 0%, transparent 50%),
+      radial-gradient(at 50% 50%, rgba(70, 85, 95, 0.2) 0%, transparent 40%);
     background-size: 120% 120%; /* Slightly larger than container */
     background-repeat: no-repeat;
     animation: subtle-flow 30s ease-in-out infinite alternate;
   }
   
-  /* Dark mode version with deeper teal tones */
+  /* Dark mode version with deeper charcoal tones */
   .dark .wavy-background {
-    background-color: #003333; /* Even deeper teal for dark mode */
+    background-color: #2A3439; /* Even deeper charcoal for dark mode */
     background-image:
-      radial-gradient(at 15% 80%, rgba(0, 77, 77, 0.4) 0%, transparent 50%),
-      radial-gradient(at 85% 20%, rgba(0, 51, 51, 0.5) 0%, transparent 50%),
-      radial-gradient(at 50% 50%, rgba(0, 102, 102, 0.3) 0%, transparent 40%);
+      radial-gradient(at 15% 80%, rgba(50, 65, 75, 0.4) 0%, transparent 50%),
+      radial-gradient(at 85% 20%, rgba(35, 45, 55, 0.5) 0%, transparent 50%),
+      radial-gradient(at 50% 50%, rgba(65, 80, 90, 0.3) 0%, transparent 40%);
   }
   
-  /* Enhanced text contrast for teal background */
+  /* Enhanced text contrast for charcoal background */
   .wavy-background {
     color: #ffffff; /* Ensure white text for maximum contrast */
   }
