@@ -14,7 +14,7 @@ interface DashboardCardProps {
 const DashboardCard = ({ title, value, icon, iconColor, cardTheme = 'default', role }: DashboardCardProps) => {
   // Define theme-based card styles
   const getCardThemeClass = () => {
-    const baseClass = "glass-card transition-all duration-300 hover:scale-105 hover:shadow-xl";
+    const baseClass = "glass-card transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:-translate-y-1";
     
     switch (cardTheme) {
       case 'primary':
@@ -50,14 +50,17 @@ const DashboardCard = ({ title, value, icon, iconColor, cardTheme = 'default', r
 
   return (
     <Card className={cn(getCardThemeClass(), getRoleSpecificClass())}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-card-foreground">{title}</CardTitle>
-        {React.cloneElement(icon as React.ReactElement, {
-          className: cn("h-4 w-4", iconColor || "text-muted-foreground"),
-        })}
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent pointer-events-none" />
+        <CardTitle className="text-sm font-medium text-card-foreground relative z-10">{title}</CardTitle>
+        <div className="relative z-10 p-1.5 rounded-full bg-white/20 dark:bg-black/20 backdrop-blur-sm">
+          {React.cloneElement(icon as React.ReactElement, {
+            className: cn("h-4 w-4", iconColor || "text-muted-foreground"),
+          })}
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-card-foreground">{value}</div>
+        <div className="text-2xl font-bold text-card-foreground drop-shadow-sm">{value}</div>
       </CardContent>
     </Card>
   );
