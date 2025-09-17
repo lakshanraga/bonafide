@@ -64,7 +64,7 @@ const Header = ({ navItems, portalName, iconTextColorClass }: HeaderProps) => {
                   {item.title}
                 </NavLink>
               ))}
-              <Button variant="ghost" className={cn("flex items-center gap-4 px-2.5 w-full justify-start", iconTextColorClass || "text-foreground hover:text-foreground/80")} onClick={signOut}>
+              <Button variant="ghost" className={cn("flex items-center gap-4 px-2.5 w-full justify-start", iconTextColorClass || "text-foreground hover:text-foreground/80")} onClick={() => { console.log("Mobile logout button clicked"); signOut(); }}>
                 <LogOut className="h-5 w-5" />
                 Logout
               </Button>
@@ -96,7 +96,7 @@ const Header = ({ navItems, portalName, iconTextColorClass }: HeaderProps) => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={signOut}
+          onClick={() => { console.log("Desktop logout button clicked"); signOut(); }} // This is the desktop logout button
           className={cn(
             "hover:bg-foreground/10",
             iconTextColorClass || "text-foreground", // Apply custom color or default
