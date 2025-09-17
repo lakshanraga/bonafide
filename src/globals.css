@@ -216,7 +216,21 @@
   
   /* Enhanced text contrast for charcoal background */
   .wavy-background {
-    color: #ffffff; /* Ensure white text for maximum contrast */
+    color: #ffffff; /* White text for charcoal background */
+  }
+  
+  /* Ensure proper text visibility in light mode */
+  .wavy-background * {
+    color: #ffffff !important; /* Force white text on charcoal background */
+  }
+  
+  /* Dark mode text styling */
+  .dark .wavy-background {
+    color: #ffffff;
+  }
+  
+  .dark .wavy-background * {
+    color: #ffffff !important;
   }
   
   .wavy-background h1,
@@ -225,8 +239,16 @@
   .wavy-background h4,
   .wavy-background h5,
   .wavy-background h6 {
-    color: #ffffff;
+    color: #ffffff !important;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Ensure all text elements are visible */
+  .wavy-background p,
+  .wavy-background span,
+  .wavy-background div,
+  .wavy-background label {
+    color: #ffffff !important;
   }
 }
 
