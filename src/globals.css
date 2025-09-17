@@ -173,6 +173,16 @@
     @apply bg-card/40 backdrop-blur-sm border border-border/30 shadow-lg;
   }
 
+  /* Sidebar text popup effects */
+  .sidebar-text-hover {
+    transition: all 0.3s ease;
+  }
+  
+  .sidebar-text-hover:hover {
+    animation: text-popup 0.3s ease forwards, text-glow 0.3s ease forwards;
+    transform-origin: center;
+  }
+
   /* New wavy background for main content */
   .wavy-background {
     background-color: hsl(var(--background)); /* Base background color */
@@ -242,5 +252,26 @@
   100% {
     transform: scale(1) translateX(0);
     opacity: 1;
+  }
+}
+
+@keyframes text-popup {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes text-glow {
+  0% {
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+  }
+  100% {
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 25px rgba(255, 255, 255, 0.5);
   }
 }

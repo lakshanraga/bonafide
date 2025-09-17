@@ -40,8 +40,8 @@ const Sidebar = ({ navItems, portalName, variant = 'default', isCollapsed = fals
         isStudent ? "border-white/20" : "border-primary-foreground/20", // Use white border for student
         isCollapsed && "justify-center px-0"
       )}>
-        <LayoutDashboard className={cn("h-6 w-6", textColorClass, isCollapsed ? "mr-0" : "mr-2")} />
-        {!isCollapsed && <h2 className={cn("text-lg font-semibold", textColorClass)}>{portalName}</h2>}
+        <LayoutDashboard className={cn("h-6 w-6 sidebar-text-hover", textColorClass, isCollapsed ? "mr-0" : "mr-2")} />
+        {!isCollapsed && <h2 className={cn("text-lg font-semibold sidebar-text-hover", textColorClass)}>{portalName}</h2>}
       </div>
 
       <nav className="flex-1 space-y-2 p-4">
@@ -52,7 +52,7 @@ const Sidebar = ({ navItems, portalName, variant = 'default', isCollapsed = fals
             end
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
+                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all sidebar-text-hover",
                 isCollapsed && "justify-center",
                 textColorClass, // Applied here
                 isStudent ? "hover:bg-white/10" : "hover:bg-primary-foreground/10", // Adjusted hover background
@@ -62,8 +62,8 @@ const Sidebar = ({ navItems, portalName, variant = 'default', isCollapsed = fals
               )
             }
           >
-            {item.icon && React.cloneElement(item.icon as React.ReactElement, { className: cn((item.icon as React.ReactElement).props.className, textColorClass) })}
-            {!isCollapsed && item.title}
+            {item.icon && React.cloneElement(item.icon as React.ReactElement, { className: cn((item.icon as React.ReactElement).props.className, textColorClass, "sidebar-text-hover") })}
+            {!isCollapsed && <span className="sidebar-text-hover">{item.title}</span>}
           </NavLink>
         ))}
       </nav>
