@@ -143,17 +143,27 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
   const signOut = async () => {
     console.log("Attempting to sign out...");
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Logout failed:', error);
-      showError('Logout failed: ' + error.message);
-    } else {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Logout failed:', error);
+        showError('Logout failed: ' + error.message);
+        return; // Early return on error
+      }
+      
       console.log("Logged out successfully, updating state and navigating.");
       showSuccess('Logged out successfully!');
+      
+      // Clear state first
       setSession(null);
       setUser(null);
       setProfile(null);
-      navigate('/login', { replace: true }); // Redirect to login after explicit logout
+      
+      // Navigate to landing page instead of login
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('Unexpected logout error:', error);
+      showError('An unexpected error occurred during logout');
     }
   };
 
