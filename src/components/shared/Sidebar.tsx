@@ -15,10 +15,12 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ navItems, portalName, variant = 'default', isCollapsed = false, toggleCollapse }: SidebarProps) => {
+  // Determine text color based on variant and theme
   const isStudent = variant === 'student';
-
-  // Determine text color based on variant
-  const textColorClass = isStudent ? "text-white" : "text-primary-foreground";
+  const isDark = document.documentElement.classList.contains('dark');
+  
+  // Use white text for student theme, and light text for dark mode, dark text for light mode
+  const textColorClass = isStudent ? "text-white" : (isDark ? "text-primary-foreground" : "text-white");
 
   return (
     <aside className={cn(
