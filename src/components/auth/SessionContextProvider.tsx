@@ -143,28 +143,32 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
   const signOut = async () => {
     console.log("Attempting to sign out...");
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Logout failed:', error);
-        showError('Logout failed: ' + error.message);
-        return; // Early return on error
+    console.log("Current session before signOut:", session); // Log current session
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error('Supabase signOut error:', error);
+      showError('Logout failed: ' + error.message);
+      // If the error is "auto session missing", it might mean the session is already gone
+      // from Supabase's perspective, but local storage might still hold stale tokens.
+      // In this case, we proceed to clear client-side state anyway.
+      if (error.message.includes("auto session missing")) {
+        console.warn("Supabase reported 'auto session missing'. Proceeding with client-side state clear.");
+      } else {
+        // If it's another type of error, we might want to stop here.
+        return;
       }
-      
-      console.log("Logged out successfully, updating state and navigating.");
+    } else {
+      console.log("Supabase signOut successful.");
       showSuccess('Logged out successfully!');
-      
-      // Clear state first
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      
-      // Navigate to landing page instead of login
-      navigate('/', { replace: true });
-    } catch (error) {
-      console.error('Unexpected logout error:', error);
-      showError('An unexpected error occurred during logout');
     }
+
+    // Always clear client-side state and navigate to landing page after attempting signOut
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    navigate('/', { replace: true }); // Redirect to landing page
   };
 
   return (
