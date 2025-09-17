@@ -280,3 +280,103 @@
     text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 25px rgba(255, 255, 255, 0.5);
   }
 }
+
+/* Dashboard Card Theme Styles */
+.dashboard-card-primary {
+  @apply bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200;
+}
+.dark .dashboard-card-primary {
+  @apply bg-gradient-to-br from-blue-950/50 to-indigo-950/50 border-blue-800/50;
+}
+
+.dashboard-card-success {
+  @apply bg-gradient-to-br from-green-50 to-emerald-100 border-green-200;
+}
+.dark .dashboard-card-success {
+  @apply bg-gradient-to-br from-green-950/50 to-emerald-950/50 border-green-800/50;
+}
+
+.dashboard-card-warning {
+  @apply bg-gradient-to-br from-amber-50 to-yellow-100 border-amber-200;
+}
+.dark .dashboard-card-warning {
+  @apply bg-gradient-to-br from-amber-950/50 to-yellow-950/50 border-amber-800/50;
+}
+
+.dashboard-card-info {
+  @apply bg-gradient-to-br from-cyan-50 to-sky-100 border-cyan-200;
+}
+.dark .dashboard-card-info {
+  @apply bg-gradient-to-br from-cyan-950/50 to-sky-950/50 border-cyan-800/50;
+}
+
+.dashboard-card-danger {
+  @apply bg-gradient-to-br from-red-50 to-rose-100 border-red-200;
+}
+.dark .dashboard-card-danger {
+  @apply bg-gradient-to-br from-red-950/50 to-rose-950/50 border-red-800/50;
+}
+
+.dashboard-card-purple {
+  @apply bg-gradient-to-br from-purple-50 to-violet-100 border-purple-200;
+}
+.dark .dashboard-card-purple {
+  @apply bg-gradient-to-br from-purple-950/50 to-violet-950/50 border-purple-800/50;
+}
+
+.dashboard-card-emerald {
+  @apply bg-gradient-to-br from-emerald-50 to-teal-100 border-emerald-200;
+}
+.dark .dashboard-card-emerald {
+  @apply bg-gradient-to-br from-emerald-950/50 to-teal-950/50 border-emerald-800/50;
+}
+
+.dashboard-card-cyan {
+  @apply bg-gradient-to-br from-cyan-50 to-blue-100 border-cyan-200;
+}
+.dark .dashboard-card-cyan {
+  @apply bg-gradient-to-br from-cyan-950/50 to-blue-950/50 border-cyan-800/50;
+}
+
+.dashboard-card-rose {
+  @apply bg-gradient-to-br from-rose-50 to-pink-100 border-rose-200;
+}
+.dark .dashboard-card-rose {
+  @apply bg-gradient-to-br from-rose-950/50 to-pink-950/50 border-rose-800/50;
+}
+
+/* Role-specific card themes */
+.dashboard-card-admin {
+  @apply bg-gradient-to-br from-slate-50 to-gray-100 border-slate-300;
+}
+.dark .dashboard-card-admin {
+  @apply bg-gradient-to-br from-slate-900/60 to-gray-900/60 border-slate-700/50;
+}
+
+.dashboard-card-student {
+  @apply bg-gradient-to-br from-sky-50 to-blue-100 border-sky-200;
+}
+.dark .dashboard-card-student {
+  @apply bg-gradient-to-br from-sky-950/50 to-blue-950/50 border-sky-700/50;
+}
+
+.dashboard-card-tutor {
+  @apply bg-gradient-to-br from-lime-50 to-green-100 border-lime-200;
+}
+.dark .dashboard-card-tutor {
+  @apply bg-gradient-to-br from-lime-950/50 to-green-950/50 border-lime-700/50;
+}
+
+.dashboard-card-hod {
+  @apply bg-gradient-to-br from-teal-50 to-emerald-100 border-teal-200;
+}
+.dark .dashboard-card-hod {
+  @apply bg-gradient-to-br from-teal-950/50 to-emerald-950/50 border-teal-700/50;
+}
+
+.dashboard-card-principal {
+  @apply bg-gradient-to-br from-violet-50 to-purple-100 border-violet-200;
+}
+.dark .dashboard-card-principal {
+  @apply bg-gradient-to-br from-violet-950/50 to-purple-950/50 border-violet-700/50;
+}

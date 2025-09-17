@@ -107,7 +107,9 @@ const StudentDashboard = () => {
             title="Total Requests"
             value={totalRequests.toString()}
             icon={<FileText />}
-            iconColor="text-foreground"
+            iconColor="text-blue-500"
+            cardTheme="info"
+            role="student"
           />
         </div>
         <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
@@ -115,7 +117,9 @@ const StudentDashboard = () => {
             title="Approved"
             value={approvedRequests.length.toString()}
             icon={<CheckCircle />}
-            iconColor="text-foreground"
+            iconColor="text-green-500"
+            cardTheme="success"
+            role="student"
           />
         </div>
         <div className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
@@ -123,7 +127,9 @@ const StudentDashboard = () => {
             title="Pending / Returned"
             value={pendingOrReturned.toString()}
             icon={<Clock />}
-            iconColor="text-foreground"
+            iconColor="text-amber-500"
+            cardTheme="warning"
+            role="student"
           />
         </div>
       </div>

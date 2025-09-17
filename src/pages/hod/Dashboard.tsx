@@ -87,19 +87,25 @@ const HodDashboard = () => {
           title="Pending Requests"
           value={pendingRequests.toString()}
           icon={<FileClock />}
-          iconColor="text-primary"
+          iconColor="text-amber-500"
+          cardTheme="warning"
+          role="hod"
         />
         <DashboardCard
           title="Total Students"
           value={totalStudents.toString()}
           icon={<Users />}
-          iconColor="text-indigo-500"
+          iconColor="text-blue-500"
+          cardTheme="info"
+          role="hod"
         />
         <DashboardCard
           title="Active Batches"
           value={activeBatches.toString()}
           icon={<ClipboardList />}
-          iconColor="text-teal-500"
+          iconColor="text-emerald-500"
+          cardTheme="success"
+          role="hod"
         />
       </div>
     </div>

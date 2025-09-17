@@ -65,13 +65,17 @@ const AdminDashboard = () => {
           title="Pending Requests"
           value={pendingRequests.toString()}
           icon={<FileClock />}
-          iconColor="text-primary"
+          iconColor="text-amber-500"
+          cardTheme="warning"
+          role="admin"
         />
         <DashboardCard
           title="Total Departments"
           value={totalDepartments.toString()}
           icon={<Building />}
-          iconColor="text-primary"
+          iconColor="text-blue-500"
+          cardTheme="primary"
+          role="admin"
         />
       </div>
     </div>
