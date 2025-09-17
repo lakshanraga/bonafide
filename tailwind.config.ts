@@ -119,8 +119,8 @@ export default {
         "principal-header": "hsl(var(--principal-header-background))",
         "principal-main": "hsl(var(--principal-main-background))",
         // Custom colors for login button hover effect
-        "lighter-dark-shade": "#222b45",
-        "dark-blue-hover": "hsl(220 80% 40%)", // New dark blue color
+        "lighter-dark-shade": "hsl(220 30% 25%)",
+        "dark-blue-hover": "hsl(220 60% 45%)", // Professional blue color
       },
       borderRadius: {
         lg: "var(--radius)",
