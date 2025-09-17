@@ -24,11 +24,11 @@ const Sidebar = ({ navItems, portalName, variant = 'default', isCollapsed = fals
 
   return (
     <aside className={cn(
-      "hidden md:flex md:flex-col border-r transition-all duration-300 ease-in-out relative h-full bg-sidebar-gradient",
-      isCollapsed ? "md:w-20" : "md:w-64",
+      "hidden md:flex md:flex-col border-r transition-all duration-300 ease-in-out relative h-full bg-sidebar-gradient backdrop-blur-sm bg-background/50",
+      isCollapsed ? "md:w-20" : "md:w-64"
     )}>
       <div className={cn(
-        "flex h-14 items-center border-b px-6",
+        "flex h-14 items-center border-b px-6 backdrop-blur-sm bg-background/30",
         isStudent ? "border-white/20" : "border-primary-foreground/20", // Use white border for student
         isCollapsed && "justify-center px-0"
       )}>
