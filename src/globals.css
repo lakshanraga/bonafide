@@ -86,9 +86,9 @@
     --dashboard-gradient-lavender: 260 30% 45%;
     
     /* Deep Teal Main Background Variables */
-    --main-background-charcoal: 210 15% 25%; /* #36454F in HSL */
-    --main-background-charcoal-light: 210 15% 30%;
-    --main-background-charcoal-accent: 210 15% 35%;
+    --main-background-white: 0 0% 100%; /* White background in HSL */
+    --main-background-white-light: 0 0% 98%;
+    --main-background-white-accent: 0 0% 96%;
   }
 
   .dark {
@@ -193,30 +193,30 @@
     transform-origin: center;
   }
 
-  /* New wavy background for main content with charcoal gray */
+  /* New wavy background for main content with white for light mode */
   .wavy-background {
-    background-color: #36454F; /* Charcoal gray base background */
+    background-color: #ffffff; /* White background for light mode */
     background-image:
-      radial-gradient(at 15% 80%, rgba(60, 75, 85, 0.3) 0%, transparent 50%),
-      radial-gradient(at 85% 20%, rgba(45, 60, 70, 0.4) 0%, transparent 50%),
-      radial-gradient(at 50% 50%, rgba(70, 85, 95, 0.2) 0%, transparent 40%);
+      radial-gradient(at 15% 80%, rgba(240, 240, 240, 0.3) 0%, transparent 50%),
+      radial-gradient(at 85% 20%, rgba(230, 230, 230, 0.4) 0%, transparent 50%),
+      radial-gradient(at 50% 50%, rgba(250, 250, 250, 0.2) 0%, transparent 40%);
     background-size: 120% 120%; /* Slightly larger than container */
     background-repeat: no-repeat;
     animation: subtle-flow 30s ease-in-out infinite alternate;
   }
   
-  /* Dark mode version with deeper charcoal tones */
+  /* Dark mode version with charcoal tones */
   .dark .wavy-background {
-    background-color: #2A3439; /* Even deeper charcoal for dark mode */
+    background-color: #2A3439; /* Charcoal for dark mode */
     background-image:
       radial-gradient(at 15% 80%, rgba(50, 65, 75, 0.4) 0%, transparent 50%),
       radial-gradient(at 85% 20%, rgba(35, 45, 55, 0.5) 0%, transparent 50%),
       radial-gradient(at 50% 50%, rgba(65, 80, 90, 0.3) 0%, transparent 40%);
   }
   
-  /* Enhanced text contrast for charcoal background */
+  /* Enhanced text contrast for white background in light mode */
   .wavy-background {
-    color: #000000; /* Black text for light mode on charcoal background */
+    color: #000000; /* Black text for light mode on white background */
   }
   
   /* Ensure proper text visibility in light mode */
@@ -240,7 +240,7 @@
   .wavy-background h5,
   .wavy-background h6 {
     color: #000000 !important; /* Black text for light mode */
-    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.3); /* Light shadow for light mode */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow for light mode */
   }
   
   /* Dark mode headings */
