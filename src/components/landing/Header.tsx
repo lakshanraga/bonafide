@@ -10,7 +10,7 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { ThemeToggle } from "@/components/landing/ThemeToggle";
+import { ThemeToggle } from "@/components/shared/ThemeToggle"; // Updated import path
 import { cn } from "@/lib/utils";
 
 const Header = () => {
