@@ -43,7 +43,15 @@ const MyRequests = () => {
         setLoading(true);
         const allRequests = await fetchRequests();
         const filtered = allRequests.filter((req) => req.student_id === user.id);
-        setStudentRequests(filtered);
+        
+        // Sort requests by created_at or date in descending order (most recent first)
+        const sortedRequests = [...filtered].sort((a, b) => {
+          const dateA = new Date(a.created_at || a.date);
+          const dateB = new Date(b.created_at || b.date);
+          return dateB.getTime() - dateA.getTime();
+        });
+
+        setStudentRequests(sortedRequests);
 
         const fetchedTemplates = await fetchTemplates();
         setTemplates(fetchedTemplates);
