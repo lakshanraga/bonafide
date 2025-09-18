@@ -65,10 +65,21 @@ export const fetchStudentDetails = async (studentId: string): Promise<StudentDet
     throw new Error("Failed to fetch student details: " + studentError?.message);
   }
 
+  // --- ADDED LOGGING FOR DEBUGGING ---
+  console.log("Dyad Debug: Raw studentData from Supabase:", studentData);
+  // --- END ADDED LOGGING ---
+
   const batch = studentData.batches as unknown as Batch;
   const department = batch?.departments as unknown as Department;
   const tutor = studentData.tutors as unknown as Profile;
   const hod = studentData.hods as unknown as Profile;
+
+  // --- ADDED LOGGING FOR DEBUGGING ---
+  console.log("Dyad Debug: Processed batch:", batch);
+  console.log("Dyad Debug: Processed department:", department);
+  console.log("Dyad Debug: Processed tutor:", tutor);
+  console.log("Dyad Debug: Processed hod:", hod);
+  // --- END ADDED LOGGING ---
 
   return {
     ...profileData,
@@ -450,8 +461,7 @@ export const fetchAllStudentsWithDetails = async (): Promise<StudentDetails[]> =
       department_name: department?.name,
       tutor_id: tutor?.id,
       tutor_name: tutor ? `${tutor.first_name} ${tutor.last_name || ''}`.trim() : undefined,
-      hod_id: hod?.id,
-      hod_name: hod ? `${hod.first_name} ${hod.last_name || ''}`.trim() : undefined,
+      hod_id: hod ? `${hod.first_name} ${hod.last_name || ''}`.trim() : undefined,
     } as StudentDetails;
   });
 };
