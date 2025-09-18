@@ -45,7 +45,7 @@ const TutorRequestHistory = () => {
           .select(`
             id,
             register_number,
-            profiles(first_name, last_name),
+            profiles!students_id_fkey(first_name, last_name),
             batches(current_semester)
           `)
           .eq('tutor_id', user.id);

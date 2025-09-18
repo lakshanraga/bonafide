@@ -63,7 +63,7 @@ const HodRequestHistory = () => {
           .select(`
             id,
             register_number,
-            profiles(first_name, last_name, email, phone_number),
+            profiles!students_id_fkey(first_name, last_name, email, phone_number),
             batches(current_semester)
           `);
 
