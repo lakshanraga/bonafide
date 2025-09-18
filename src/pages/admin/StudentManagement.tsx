@@ -64,16 +64,25 @@ const StudentManagement = () => {
 
   const fetchAllData = async () => {
     setLoading(true);
-    const fetchedStudents = await fetchAllStudentsWithDetails();
-    const fetchedDepartments = await fetchDepartments();
-    const fetchedBatches = await fetchBatches();
-    const fetchedHods = await fetchProfiles('hod');
+    try {
+      const fetchedStudents = await fetchAllStudentsWithDetails();
+      const fetchedDepartments = await fetchDepartments();
+      const fetchedBatches = await fetchBatches();
+      const fetchedHods = await fetchProfiles('hod');
 
-    setAllStudents(fetchedStudents);
-    setDepartments(fetchedDepartments);
-    setBatches(fetchedBatches);
-    setHods(fetchedHods);
-    setLoading(false);
+      setAllStudents(fetchedStudents);
+      setDepartments(fetchedDepartments);
+      setBatches(fetchedBatches);
+      setHods(fetchedHods);
+    } catch (error: any) {
+      showError(error.message);
+      setAllStudents([]); // Clear data on error
+      setDepartments([]);
+      setBatches([]);
+      setHods([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
