@@ -67,29 +67,37 @@ const BatchManagement = () => {
 
   const fetchAllData = async () => {
     setLoading(true);
-    const fetchedBatches = await fetchBatches();
-    const fetchedDepartments = await fetchDepartments();
-    const fetchedTutors = await fetchProfiles('tutor');
+    try {
+      const fetchedBatches = await fetchBatches();
+      const fetchedDepartments = await fetchDepartments();
+      const fetchedTutors = await fetchProfiles('tutor');
 
-    // Process batches to update semester info if needed
-    const updatedBatches = fetchedBatches.map((batch) => {
-      const fullBatchName = batch.section
-        ? `${batch.name} ${batch.section}`
-        : batch.name;
-      const currentSemester = calculateCurrentSemesterForBatch(fullBatchName);
-      const { from, to } = getSemesterDateRange(fullBatchName, currentSemester);
-      return {
-        ...batch,
-        current_semester: currentSemester,
-        semester_from_date: from,
-        semester_to_date: to,
-      };
-    });
+      // Process batches to update semester info if needed
+      const updatedBatches = fetchedBatches.map((batch) => {
+        const fullBatchName = batch.section
+          ? `${batch.name} ${batch.section}`
+          : batch.name;
+        const currentSemester = calculateCurrentSemesterForBatch(fullBatchName);
+        const { from, to } = getSemesterDateRange(fullBatchName, currentSemester);
+        return {
+          ...batch,
+          current_semester: currentSemester,
+          semester_from_date: from,
+          semester_to_date: to,
+        };
+      });
 
-    setBatches(updatedBatches);
-    setDepartments(fetchedDepartments);
-    setTutors(fetchedTutors);
-    setLoading(false);
+      setBatches(updatedBatches);
+      setDepartments(fetchedDepartments);
+      setTutors(fetchedTutors);
+    } catch (error: any) {
+      showError(error.message);
+      setBatches([]); // Clear data on error
+      setDepartments([]);
+      setTutors([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {

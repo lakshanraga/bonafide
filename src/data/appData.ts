@@ -18,7 +18,7 @@ export const fetchRequests = async (): Promise<BonafideRequest[]> => {
   const { data, error } = await supabase.from("requests").select("*");
   if (error) {
     console.error("Error fetching requests:", error);
-    return [];
+    throw new Error("Failed to fetch requests: " + error.message);
   }
   return data as BonafideRequest[];
 };
@@ -31,7 +31,7 @@ export const fetchProfiles = async (role?: string): Promise<Profile[]> => {
   const { data, error } = await query;
   if (error) {
     console.error(`Error fetching ${role || ''} profiles:`, error);
-    return [];
+    throw new Error(`Failed to fetch ${role || ''} profiles: ` + error.message);
   }
   return data as Profile[];
 };
@@ -45,7 +45,7 @@ export const fetchStudentDetails = async (studentId: string): Promise<StudentDet
 
   if (profileError || !profileData) {
     console.error("Error fetching student profile:", profileError);
-    return null;
+    throw new Error("Failed to fetch student profile: " + profileError?.message);
   }
 
   const { data: studentData, error: studentError } = await supabase
@@ -62,7 +62,7 @@ export const fetchStudentDetails = async (studentId: string): Promise<StudentDet
 
   if (studentError || !studentData) {
     console.error("Error fetching student details:", studentError);
-    return null;
+    throw new Error("Failed to fetch student details: " + studentError?.message);
   }
 
   const batch = studentData.batches as unknown as Batch;
@@ -99,7 +99,7 @@ export const fetchTutorDetails = async (tutorId: string): Promise<TutorDetails |
 
   if (profileError || !profileData) {
     console.error("Error fetching tutor profile:", profileError);
-    return null;
+    throw new Error("Failed to fetch tutor profile: " + profileError?.message);
   }
 
   const department = profileData.departments as unknown as Department;
@@ -124,7 +124,7 @@ export const fetchHodDetails = async (hodId: string): Promise<HodDetails | null>
 
   if (profileError || !profileData) {
     console.error("Error fetching HOD profile:", profileError);
-    return null;
+    throw new Error("Failed to fetch HOD profile: " + profileError?.message);
   }
 
   const department = profileData.departments as unknown as Department;
@@ -140,7 +140,7 @@ export const fetchDepartments = async (): Promise<Department[]> => {
   const { data, error } = await supabase.from("departments").select("*");
   if (error) {
     console.error("Error fetching departments:", error);
-    return [];
+    throw new Error("Failed to fetch departments: " + error.message);
   }
   return data as Department[];
 };
@@ -153,7 +153,7 @@ export const fetchBatches = async (): Promise<Batch[]> => {
   `);
   if (error) {
     console.error("Error fetching batches:", error);
-    return [];
+    throw new Error("Failed to fetch batches: " + error.message);
   }
   return data as Batch[];
 };
@@ -162,7 +162,7 @@ export const fetchTemplates = async (): Promise<CertificateTemplate[]> => {
   const { data, error } = await supabase.from("templates").select("*");
   if (error) {
     console.error("Error fetching templates:", error);
-    return [];
+    throw new Error("Failed to fetch templates: " + error.message);
   }
   return data as CertificateTemplate[];
 };
@@ -429,7 +429,7 @@ export const fetchAllStudentsWithDetails = async (): Promise<StudentDetails[]> =
 
   if (error) {
     console.error("Error fetching all students with details:", error);
-    return [];
+    throw new Error("Failed to fetch all students with details: " + error.message);
   }
 
   return data.map((profile: any) => {
