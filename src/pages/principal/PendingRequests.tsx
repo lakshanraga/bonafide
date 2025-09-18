@@ -39,6 +39,7 @@ const PrincipalPendingRequests = () => {
   const [requests, setRequests] = useState<BonafideRequest[]>([]);
   const [selectedRequest, setSelectedRequest] =
     useState<BonafideRequest | null>(null);
+  const [previewStudentDetails, setPreviewStudentDetails] = useState<StudentDetails | null>(null); // New state for preview
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isReturnOpen, setIsReturnOpen] = useState(false);
   const [isApproveOpen, setIsApproveOpen] = useState(false);
@@ -111,6 +112,7 @@ const PrincipalPendingRequests = () => {
       fetchPrincipalRequests(); // Refresh list
       setIsApproveOpen(false);
       setSelectedRequest(null);
+      setPreviewStudentDetails(null); // Clear preview student details
       setAddSignature(true);
     } else {
       showError("Failed to approve request.");
@@ -126,14 +128,18 @@ const PrincipalPendingRequests = () => {
       setIsReturnOpen(false);
       setReturnReason("");
       setSelectedRequest(null);
+      setPreviewStudentDetails(null); // Clear preview student details
     } else {
       showError("Failed to return request.");
     }
   };
 
-  const openReviewDialog = (request: BonafideRequest) => {
+  const openReviewDialog = async (request: BonafideRequest) => {
     setSelectedRequest(request);
     setIsReviewOpen(true);
+    // Fetch student details for the preview
+    const student = await fetchStudentDetails(request.student_id);
+    setPreviewStudentDetails(student);
   };
 
   if (loading) {
@@ -193,7 +199,13 @@ const PrincipalPendingRequests = () => {
         </CardContent>
       </Card>
 
-      <Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
+      <Dialog open={isReviewOpen} onOpenChange={(open) => {
+        setIsReviewOpen(open);
+        if (!open) {
+          setSelectedRequest(null);
+          setPreviewStudentDetails(null);
+        }
+      }}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Review Request</DialogTitle>
@@ -221,7 +233,14 @@ const PrincipalPendingRequests = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isApproveOpen} onOpenChange={setIsApproveOpen}>
+      <Dialog open={isApproveOpen} onOpenChange={(open) => {
+        setIsApproveOpen(open);
+        if (!open) {
+          setSelectedRequest(null);
+          setPreviewStudentDetails(null);
+          setAddSignature(true);
+        }
+      }}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Approve Certificate</DialogTitle>
@@ -236,7 +255,7 @@ const PrincipalPendingRequests = () => {
                     dangerouslySetInnerHTML={{
                       __html: getCertificateHtml(
                         selectedRequest,
-                        null, // Student details will be fetched inside getCertificateHtml
+                        previewStudentDetails, // Use the fetched student details
                         templates.find(
                           (t) => t.id === selectedRequest.template_id
                         ),
@@ -273,7 +292,14 @@ const PrincipalPendingRequests = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isReturnOpen} onOpenChange={setIsReturnOpen}>
+      <Dialog open={isReturnOpen} onOpenChange={(open) => {
+        setIsReturnOpen(open);
+        if (!open) {
+          setSelectedRequest(null);
+          setPreviewStudentDetails(null);
+          setReturnReason("");
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reason for Return</DialogTitle>
