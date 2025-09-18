@@ -461,7 +461,8 @@ export const fetchAllStudentsWithDetails = async (): Promise<StudentDetails[]> =
       department_name: department?.name,
       tutor_id: tutor?.id,
       tutor_name: tutor ? `${tutor.first_name} ${tutor.last_name || ''}`.trim() : undefined,
-      hod_id: hod ? `${hod.first_name} ${hod.last_name || ''}`.trim() : undefined,
+      hod_id: hod?.id, // Corrected: This should be the ID, not the name
+      hod_name: hod ? `${hod.first_name} ${hod.last_name || ''}`.trim() : undefined,
     } as StudentDetails;
   });
 };
