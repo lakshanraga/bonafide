@@ -56,8 +56,13 @@ const StudentDashboard = () => {
   );
   const pendingOrReturned = totalRequests - approvedRequests.length;
 
+  // Sort requests by created_at or date in descending order (most recent first)
   const latestRequest = [...studentRequests].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) => {
+      const dateA = new Date(a.created_at || a.date);
+      const dateB = new Date(b.created_at || b.date);
+      return dateB.getTime() - dateA.getTime();
+    }
   )[0];
 
   const handleDownload = async (request: BonafideRequest) => {
@@ -163,7 +168,7 @@ const StudentDashboard = () => {
                       Date Submitted
                     </p>
                     <p className="font-semibold">
-                      {formatDateToIndian(latestRequest.date)}
+                      {formatDateToIndian(latestRequest.created_at || latestRequest.date)}
                     </p>
                   </div>
                   <div>
@@ -199,7 +204,7 @@ const StudentDashboard = () => {
                     <CardHeader>
                       <CardTitle className="text-lg">{request.type}</CardTitle>
                       <CardDescription className="text-muted-foreground">
-                        Approved on {formatDateToIndian(request.date)}
+                        Approved on {formatDateToIndian(request.created_at || request.date)}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
