@@ -35,11 +35,11 @@ const Header = () => {
             <NavigationMenuList>
               {navLinks.map((link) => (
                 <NavigationMenuItem key={link.title}>
-                  <Link to={link.href}>
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                    <Link to={link.href}>
                       {link.title}
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
               ))}
             </NavigationMenuList>

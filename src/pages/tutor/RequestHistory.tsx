@@ -42,12 +42,7 @@ const TutorRequestHistory = () => {
         // Fetch students assigned to this tutor
         const { data: studentsData, error: studentsError } = await supabase
           .from('students')
-          .select(`
-            id,
-            register_number,
-            profiles!students_id_fkey(first_name, last_name),
-            batches(current_semester)
-          `)
+          .select(`id, register_number`) // Only fetch ID and register_number initially
           .eq('tutor_id', user.id);
 
         if (studentsError) {
@@ -57,23 +52,18 @@ const TutorRequestHistory = () => {
           return;
         }
 
-        const mappedStudents: StudentDetails[] = studentsData.map((s: any) => ({
-          id: s.id,
-          register_number: s.register_number,
-          first_name: s.profiles.first_name,
-          last_name: s.profiles.last_name,
-          current_semester: s.batches?.current_semester,
-          role: 'student', // Added missing role property
-        }));
-        setStudentsInCharge(mappedStudents);
-
-        const studentIds = mappedStudents.map(s => s.id);
-
+        const studentIds = studentsData?.map(s => s.id) || [];
         if (studentIds.length === 0) {
           setAllRequests([]);
+          setStudentsInCharge([]);
           setLoading(false);
           return;
         }
+
+        // Fetch full student details for each assigned student
+        const detailedStudentsPromises = studentIds.map(id => fetchStudentDetails(id));
+        const detailedStudents = await Promise.all(detailedStudentsPromises);
+        setStudentsInCharge(detailedStudents.filter(s => s !== null) as StudentDetails[]);
 
         // Fetch requests for these students, excluding pending tutor approval
         const { data: requestsData, error: requestsError } = await supabase

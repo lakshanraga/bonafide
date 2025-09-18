@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { StudentDetails } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { showError } from "@/utils/toast";
+import { fetchStudentDetails } from "@/data/appData"; // Import fetchStudentDetails
 
 const TutorStudents = () => {
   const { user } = useSession();
@@ -27,32 +28,32 @@ const TutorStudents = () => {
     const fetchAssignedStudents = async () => {
       if (user?.id) {
         setLoading(true);
-        const { data, error } = await supabase
+        // First, fetch only the IDs of students assigned to this tutor
+        const { data: studentIdsData, error: studentIdsError } = await supabase
           .from('students')
-          .select(`
-            id,
-            register_number,
-            profiles!students_id_fkey(first_name, last_name, email, phone_number),
-            batches(name, section)
-          `)
+          .select('id')
           .eq('tutor_id', user.id);
 
-        if (error) {
-          showError("Error fetching assigned students: " + error.message);
+        if (studentIdsError) {
+          showError("Error fetching assigned student IDs: " + studentIdsError.message);
           setAssignedStudents([]);
-        } else {
-          const mappedStudents: StudentDetails[] = data.map((s: any) => ({
-            id: s.id,
-            register_number: s.register_number,
-            first_name: s.profiles.first_name,
-            last_name: s.profiles.last_name,
-            email: s.profiles.email,
-            phone_number: s.profiles.phone_number,
-            batch_name: s.batches ? `${s.batches.name} ${s.batches.section || ''}`.trim() : 'N/A',
-            role: 'student', // Added missing role property
-          }));
-          setAssignedStudents(mappedStudents);
+          setLoading(false);
+          return;
         }
+
+        const studentIds = studentIdsData?.map(s => s.id) || [];
+
+        if (studentIds.length === 0) {
+          setAssignedStudents([]);
+          setLoading(false);
+          return;
+        }
+
+        // Then, fetch full details for each student using fetchStudentDetails
+        const detailedStudentsPromises = studentIds.map(id => fetchStudentDetails(id));
+        const detailedStudents = await Promise.all(detailedStudentsPromises);
+        setAssignedStudents(detailedStudents.filter(s => s !== null) as StudentDetails[]);
+        
         setLoading(false);
       }
     };

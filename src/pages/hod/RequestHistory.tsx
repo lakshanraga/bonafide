@@ -57,42 +57,37 @@ const HodRequestHistory = () => {
         }
         setAllBatches(batchesData as Batch[]);
 
-        // Fetch students in HOD's department (RLS will filter)
-        const { data: studentsData, error: studentsError } = await supabase
+        // Fetch student IDs in HOD's department (RLS will filter)
+        const { data: studentIdsData, error: studentIdsError } = await supabase
           .from('students')
-          .select(`
-            id,
-            register_number,
-            profiles!students_id_fkey(first_name, last_name, email, phone_number),
-            batches(current_semester)
-          `);
+          .select('id');
 
-        if (studentsError) {
-          showError("Error fetching students for department: " + studentsError.message);
+        if (studentIdsError) {
+          showError("Error fetching student IDs for department: " + studentIdsError.message);
           setAllStudents([]);
           setAllRequests([]);
           setLoading(false);
           return;
         }
 
-        const mappedStudents: StudentDetails[] = studentsData.map((s: any) => ({
-          id: s.id,
-          register_number: s.register_number,
-          first_name: s.profiles.first_name,
-          last_name: s.profiles.last_name,
-          email: s.profiles.email,
-          phone_number: s.profiles.phone_number,
-          batch_id: s.batches?.id,
-          batch_name: s.batches ? `${s.batches.name} ${s.batches.section || ''}`.trim() : 'N/A',
-          current_semester: s.batches?.current_semester,
-          role: 'student', // Added missing role property
-        }));
-        setAllStudents(mappedStudents);
+        const studentIds = studentIdsData?.map(s => s.id) || [];
+        if (studentIds.length === 0) {
+          setAllStudents([]);
+          setAllRequests([]);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch full student details for each student in the department
+        const detailedStudentsPromises = studentIds.map(id => fetchStudentDetails(id));
+        const detailedStudents = await Promise.all(detailedStudentsPromises);
+        setAllStudents(detailedStudents.filter(s => s !== null) as StudentDetails[]);
 
         // Fetch requests for these students, excluding pending tutor approval (RLS will filter)
         const { data: requestsData, error: requestsError } = await supabase
           .from('requests')
           .select('*')
+          .in('student_id', studentIds) // Filter requests by students in HOD's department
           .neq('status', 'Pending HOD Approval')
           .neq('status', 'Pending Tutor Approval'); // HOD doesn't see tutor pending either
 
