@@ -80,17 +80,17 @@ const StudentProfile = () => {
           <ProfileField label="Register Number">
             {profile.register_number}
           </ProfileField>
-          <ProfileField label="Academic Year">{profile.batch_name}</ProfileField>
+          <ProfileField label="Academic Year">{profile.batch_name || "N/A"}</ProfileField>
           <ProfileField label="Current Semester">
-            {profile.current_semester}
+            {profile.current_semester || "N/A"}
           </ProfileField>
           <ProfileField label="Status">
             <Badge variant="success">Active</Badge>
           </ProfileField>
           <ProfileField label="Tutor">{profile.tutor_name || "N/A"}</ProfileField>
           <ProfileField label="HOD">{profile.hod_name || "N/A"}</ProfileField>
-          <ProfileField label="Department">{profile.department_name}</ProfileField>
-          <ProfileField label="Parent Name">{profile.parent_name}</ProfileField>
+          <ProfileField label="Department">{profile.department_name || "N/A"}</ProfileField>
+          <ProfileField label="Parent Name">{profile.parent_name || "N/A"}</ProfileField>
 
           <EditableProfileField
             label="Email"
