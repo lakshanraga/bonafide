@@ -53,9 +53,9 @@ export const fetchStudentDetails = async (studentId: string): Promise<StudentDet
     .select(`
       register_number,
       parent_name,
-      batches(name, section, current_semester, departments(name)),
-      tutors:profiles!students_tutor_id_fkey(first_name, last_name),
-      hods:profiles!students_hod_id_fkey(first_name, last_name)
+      batches(id, name, section, current_semester, departments(id, name)),
+      tutors:profiles!students_tutor_id_fkey(id, first_name, last_name),
+      hods:profiles!students_hod_id_fkey(id, first_name, last_name)
     `)
     .eq("id", studentId)
     .single();
@@ -66,7 +66,7 @@ export const fetchStudentDetails = async (studentId: string): Promise<StudentDet
   }
 
   const batch = studentData.batches as unknown as Batch;
-  const department = batch?.departments as unknown as Department; // Corrected type assertion
+  const department = batch?.departments as unknown as Department;
   const tutor = studentData.tutors as unknown as Profile;
   const hod = studentData.hods as unknown as Profile;
 
