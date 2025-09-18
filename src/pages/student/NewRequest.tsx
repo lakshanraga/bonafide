@@ -117,6 +117,14 @@ const NewRequest = () => {
               <Label htmlFor="student-id">Register Number</Label>
               <Input id="student-id" defaultValue={studentDetails.register_number} disabled />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="parent-name">Father's Name</Label>
+              <Input id="parent-name" defaultValue={studentDetails.parent_name || 'N/A'} disabled />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="department-name">Department</Label>
+              <Input id="department-name" defaultValue={studentDetails.department_name || 'N/A'} disabled />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="bonafide-type">Type</Label>
