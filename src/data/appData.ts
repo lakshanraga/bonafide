@@ -37,6 +37,9 @@ export const fetchProfiles = async (role?: string): Promise<Profile[]> => {
 };
 
 export const fetchStudentDetails = async (studentId: string): Promise<StudentDetails | null> => {
+  console.log("Dyad Debug: Starting fetchStudentDetails for ID:", studentId);
+
+  // 1. Fetch the base profile data for the student
   const { data: profileData, error: profileError } = await supabase
     .from("profiles")
     .select("*")
@@ -44,47 +47,94 @@ export const fetchStudentDetails = async (studentId: string): Promise<StudentDet
     .single();
 
   if (profileError || !profileData) {
-    console.error("Error fetching student profile:", profileError);
+    console.error("Dyad Debug: Error fetching student profile:", profileError);
     throw new Error("Failed to fetch student profile: " + profileError?.message);
   }
+  console.log("Dyad Debug: Fetched profileData:", profileData);
 
-  const { data: studentData, error: studentError } = await supabase
+  // 2. Fetch the student-specific details (register_number, parent_name, and IDs for joins)
+  const { data: studentSpecificData, error: studentSpecificError } = await supabase
     .from("students")
     .select(`
       register_number,
       parent_name,
-      batches(id, name, section, current_semester, departments(id, name)),
-      tutors:profiles!students_tutor_id_fkey(id, first_name, last_name),
-      hods:profiles!students_hod_id_fkey(id, first_name, last_name)
+      batch_id,
+      tutor_id,
+      hod_id
     `)
     .eq("id", studentId)
     .single();
 
-  if (studentError || !studentData) {
-    console.error("Error fetching student details:", studentError);
-    throw new Error("Failed to fetch student details: " + studentError?.message);
+  if (studentSpecificError || !studentSpecificData) {
+    console.error("Dyad Debug: Error fetching student-specific data:", studentSpecificError);
+    throw new Error("Failed to fetch student-specific data: " + studentSpecificError?.message);
+  }
+  console.log("Dyad Debug: Fetched studentSpecificData (with IDs):", studentSpecificData);
+
+  const { batch_id, tutor_id, hod_id } = studentSpecificData;
+
+  let batch: Batch | null = null;
+  let department: Department | null = null;
+  let tutor: Profile | null = null;
+  let hod: Profile | null = null;
+
+  // 3. Fetch Batch details
+  if (batch_id) {
+    const { data: batchData, error: batchError } = await supabase
+      .from("batches")
+      .select(`*, departments(id, name)`)
+      .eq("id", batch_id)
+      .single();
+    if (batchError) {
+      console.warn("Dyad Debug: Error fetching batch details:", batchError);
+    } else {
+      batch = batchData as Batch;
+      department = batchData.departments as Department;
+      console.log("Dyad Debug: Fetched batchData:", batch);
+      console.log("Dyad Debug: Fetched departmentData:", department);
+    }
+  } else {
+    console.log("Dyad Debug: No batch_id found for student.");
   }
 
-  // --- ADDED LOGGING FOR DEBUGGING ---
-  console.log("Dyad Debug: Raw studentData from Supabase:", studentData);
-  // --- END ADDED LOGGING ---
+  // 4. Fetch Tutor profile
+  if (tutor_id) {
+    const { data: tutorData, error: tutorError } = await supabase
+      .from("profiles")
+      .select(`id, first_name, last_name`)
+      .eq("id", tutor_id)
+      .single();
+    if (tutorError) {
+      console.warn("Dyad Debug: Error fetching tutor profile:", tutorError);
+    } else {
+      tutor = tutorData as Profile;
+      console.log("Dyad Debug: Fetched tutorData:", tutor);
+    }
+  } else {
+    console.log("Dyad Debug: No tutor_id found for student.");
+  }
 
-  const batch = studentData.batches as unknown as Batch;
-  const department = batch?.departments as unknown as Department;
-  const tutor = studentData.tutors as unknown as Profile;
-  const hod = studentData.hods as unknown as Profile;
-
-  // --- ADDED LOGGING FOR DEBUGGING ---
-  console.log("Dyad Debug: Processed batch:", batch);
-  console.log("Dyad Debug: Processed department:", department);
-  console.log("Dyad Debug: Processed tutor:", tutor);
-  console.log("Dyad Debug: Processed hod:", hod);
-  // --- END ADDED LOGGING ---
+  // 5. Fetch HOD profile
+  if (hod_id) {
+    const { data: hodData, error: hodError } = await supabase
+      .from("profiles")
+      .select(`id, first_name, last_name`)
+      .eq("id", hod_id)
+      .single();
+    if (hodError) {
+      console.warn("Dyad Debug: Error fetching HOD profile:", hodError);
+    } else {
+      hod = hodData as Profile;
+      console.log("Dyad Debug: Fetched hodData:", hod);
+    }
+  } else {
+    console.log("Dyad Debug: No hod_id found for student.");
+  }
 
   return {
     ...profileData,
-    register_number: studentData.register_number,
-    parent_name: studentData.parent_name,
+    register_number: studentSpecificData.register_number,
+    parent_name: studentSpecificData.parent_name,
     batch_id: batch?.id,
     batch_name: batch ? `${batch.name} ${batch.section || ''}`.trim() : undefined,
     current_semester: batch?.current_semester,
