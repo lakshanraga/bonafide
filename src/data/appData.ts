@@ -43,7 +43,7 @@ export const fetchStudentDetails = async (studentId: string): Promise<StudentDet
     .from("students")
     .select(`
       *,
-      profiles!id(id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at),
+      main_profile:profiles!students_id_fkey(id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at),
       batches(name, section, current_semester, departments(name)),
       tutor_profile:profiles!students_tutor_id_fkey(id, first_name, last_name),
       hod_profile:profiles!students_hod_id_fkey(id, first_name, last_name)
@@ -57,7 +57,7 @@ export const fetchStudentDetails = async (studentId: string): Promise<StudentDet
   }
   console.log("Dyad Debug: Fetched studentData:", studentData);
 
-  const profile = studentData.profiles;
+  const profile = studentData.main_profile;
   const batch = studentData.batches;
   const department = batch?.departments;
   const tutor = studentData.tutor_profile;
@@ -429,7 +429,7 @@ export const fetchAllStudentsWithDetails = async (): Promise<StudentDetails[]> =
     .from("students") // Start from the students table
     .select(`
       *,
-      profiles!id(id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at),
+      main_profile:profiles!students_id_fkey(id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at),
       batches(name, section, current_semester, departments(name)),
       tutor_profile:profiles!students_tutor_id_fkey(id, first_name, last_name),
       hod_profile:profiles!students_hod_id_fkey(id, first_name, last_name)
@@ -441,7 +441,7 @@ export const fetchAllStudentsWithDetails = async (): Promise<StudentDetails[]> =
   }
 
   return data.map((studentRow: any) => {
-    const profile = studentRow.profiles;
+    const profile = studentRow.main_profile;
     const batch = studentRow.batches;
     const department = batch?.departments;
     const tutor = studentRow.tutor_profile;
