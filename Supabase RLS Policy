@@ -2,14 +2,12 @@
 -- Name: Enable read access for authenticated users based on role
 -- Target roles: authenticated
 -- USING expression:
-(id = auth.uid())
+(EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'student' AND batch_id = batches.id)) -- Student can see their own batch
 OR
-(auth.role() = 'tutor' AND id IN (SELECT id FROM students WHERE tutor_id = auth.uid()))
+(tutor_id = auth.uid()) -- Tutor can see their assigned batch
 OR
-(auth.role() = 'hod' AND id IN (SELECT s.id FROM students s JOIN batches b ON s.batch_id = b.id WHERE b.department_id = (SELECT department_id FROM profiles WHERE id = auth.uid())))
+(EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'hod') AND department_id = (SELECT department_id FROM profiles WHERE id = auth.uid())) -- HOD can see batches in their department
 OR
-(auth.role() = 'hod' AND id IN (SELECT id FROM profiles WHERE role = 'tutor' AND department_id = (SELECT department_id FROM profiles WHERE id = auth.uid())))
+(auth.role() = 'admin') -- Admin can see all batches
 OR
-(auth.role() = 'admin')
-OR
-(auth.role() = 'principal')
+(auth.role() = 'principal') -- Principal can see all batches

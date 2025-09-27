@@ -41,16 +41,20 @@ const DepartmentOverview = () => {
   const departmentData = useMemo(() => {
     return Promise.all(
       departments.map(async (dept) => {
-        // Fetch HOD for the department
+        // Fetch HOD for the department, using limit(1) for robustness
         const { data: hodData, error: hodError } = await supabase
           .from('profiles')
           .select('first_name, last_name')
           .eq('role', 'hod')
           .eq('department_id', dept.id)
-          .single();
-        if (hodError && hodError.code !== 'PGRST116') showError("Error fetching HOD for " + dept.name + ": " + hodError.message); // PGRST116 is "no rows found"
+          .limit(1); // Use limit(1) instead of single()
+        
+        // Check for error, but specifically handle no rows found (PGRST116)
+        if (hodError && hodError.code !== 'PGRST116') {
+          showError("Error fetching HOD for " + dept.name + ": " + hodError.message);
+        }
 
-        const hodName = hodData ? `${hodData.first_name} ${hodData.last_name || ''}`.trim() : "N/A";
+        const hodName = hodData && hodData.length > 0 ? `${hodData[0].first_name} ${hodData[0].last_name || ''}`.trim() : "N/A";
 
         // Fetch active students in the department
         const { data: batchesInDept, error: batchesError } = await supabase
