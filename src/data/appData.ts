@@ -48,7 +48,8 @@ export const fetchStudentDetails = async (studentId: string): Promise<StudentDet
 
   if (profileError || !profileData) {
     console.error("Dyad Debug: Error fetching student profile:", profileError);
-    throw new Error("Failed to fetch student profile: " + profileError?.message);
+    // If RLS prevents access or data is missing, return null instead of throwing
+    return null;
   }
   console.log("Dyad Debug: Fetched profileData:", profileData);
 
@@ -67,7 +68,8 @@ export const fetchStudentDetails = async (studentId: string): Promise<StudentDet
 
   if (studentSpecificError || !studentSpecificData) {
     console.error("Dyad Debug: Error fetching student-specific data:", studentSpecificError);
-    throw new Error("Failed to fetch student-specific data: " + studentSpecificError?.message);
+    // If RLS prevents access or data is missing, return null instead of throwing
+    return null;
   }
   console.log("Dyad Debug: Fetched studentSpecificData (with IDs):", studentSpecificData);
 
@@ -160,7 +162,8 @@ export const fetchTutorDetails = async (tutorId: string): Promise<TutorDetails |
 
   if (profileError || !profileData) {
     console.error("Error fetching tutor profile:", profileError);
-    throw new Error("Failed to fetch tutor profile: " + profileError?.message);
+    // Return null instead of throwing to handle RLS or missing data gracefully
+    return null;
   }
 
   const department = profileData.departments as unknown as Department;
@@ -185,7 +188,8 @@ export const fetchHodDetails = async (hodId: string): Promise<HodDetails | null>
 
   if (profileError || !profileData) {
     console.error("Error fetching HOD profile:", profileError);
-    throw new Error("Failed to fetch HOD profile: " + profileError?.message);
+    // Return null instead of throwing to handle RLS or missing data gracefully
+    return null;
   }
 
   const department = profileData.departments as unknown as Department;
