@@ -39,7 +39,7 @@ import {
   createStudent,
   fetchProfiles,
 } from "@/data/appData";
-import { Download, MoreHorizontal, Upload } from "lucide-react";
+import { Download, MoreHorizontal, Upload, UserPlus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,16 +50,19 @@ import { downloadStudentTemplate, parseStudentFile } from "@/lib/xlsx";
 import { showSuccess, showError } from "@/utils/toast";
 import { StudentDetails, Department, Batch, Profile } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
+import AddSingleStudentForm from "@/components/admin/AddSingleStudentForm"; // New import
 
 const StudentManagement = () => {
   const [allStudents, setAllStudents] = useState<StudentDetails[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [hods, setHods] = useState<Profile[]>([]);
+  const [tutors, setTutors] = useState<Profile[]>([]); // Fetch tutors for the form
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedBatch, setSelectedBatch] = useState("all");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isAddSingleStudentDialogOpen, setIsAddSingleStudentDialogOpen] = useState(false); // New state
   const [loading, setLoading] = useState(true);
 
   const fetchAllData = async () => {
@@ -69,17 +72,20 @@ const StudentManagement = () => {
       const fetchedDepartments = await fetchDepartments();
       const fetchedBatches = await fetchBatches();
       const fetchedHods = await fetchProfiles('hod');
+      const fetchedTutors = await fetchProfiles('tutor'); // Fetch tutors
 
       setAllStudents(fetchedStudents);
       setDepartments(fetchedDepartments);
       setBatches(fetchedBatches);
       setHods(fetchedHods);
+      setTutors(fetchedTutors); // Set tutors
     } catch (error: any) {
       showError(error.message);
       setAllStudents([]); // Clear data on error
       setDepartments([]);
       setBatches([]);
       setHods([]);
+      setTutors([]); // Clear tutors on error
     } finally {
       setLoading(false);
     }
@@ -239,6 +245,32 @@ const StudentManagement = () => {
                   Upload and Process
                 </Button>
               </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* New: Add Single Student Button and Dialog */}
+          <Dialog open={isAddSingleStudentDialogOpen} onOpenChange={setIsAddSingleStudentDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="default">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add Single Student
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Add New Student</DialogTitle>
+              </DialogHeader>
+              <AddSingleStudentForm
+                departments={departments}
+                batches={batches}
+                tutors={tutors}
+                hods={hods}
+                onSuccess={() => {
+                  setIsAddSingleStudentDialogOpen(false);
+                  fetchAllData(); // Refresh student list after successful addition
+                }}
+                onCancel={() => setIsAddSingleStudentDialogOpen(false)}
+              />
             </DialogContent>
           </Dialog>
         </div>
