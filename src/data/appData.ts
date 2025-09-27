@@ -84,7 +84,7 @@ export const fetchStudentDetails = async (studentId: string): Promise<StudentDet
   if (batch_id) {
     const { data: batchData, error: batchError } = await supabase
       .from("batches")
-      .select(`*, departments(id, name)`)
+      .select(`*, departments(id, name)`) // This is correct for fetching department name
       .eq("id", batch_id)
       .single();
     if (batchError) {
@@ -487,8 +487,8 @@ export const fetchAllStudentsWithDetails = async (): Promise<StudentDetails[]> =
       id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at,
       students!inner(register_number, parent_name, batch_id, tutor_id, hod_id),
       batches(name, section, current_semester, departments(name)),
-      tutors:profiles!students_tutor_id_fkey(first_name, last_name),
-      hods:profiles!students_hod_id_fkey(first_name, last_name)
+      tutors:profiles!students_tutor_id_fkey(id, first_name, last_name),
+      hods:profiles!students_hod_id_fkey(id, first_name, last_name)
     `)
     .eq('role', 'student');
 

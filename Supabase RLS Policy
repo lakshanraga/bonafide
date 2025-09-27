@@ -1,13 +1,320 @@
--- Policy for `SELECT` (for `authenticated` role)
--- Name: Enable read access for authenticated users based on role
--- Target roles: authenticated
--- USING expression:
-(EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'student' AND batch_id = batches.id)) -- Student can see their own batch
-OR
-(tutor_id = auth.uid()) -- Tutor can see their assigned batch
-OR
-(EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'hod') AND department_id = (SELECT department_id FROM profiles WHERE id = auth.uid())) -- HOD can see batches in their department
-OR
-(auth.role() = 'admin') -- Admin can see all batches
-OR
-(auth.role() = 'principal') -- Principal can see all batches
+-- RLS for 'profiles' table
+-- Enable RLS on the 'profiles' table
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Allow all authenticated users to view their own profile
+CREATE POLICY "Allow authenticated users to view their own profile"
+ON profiles FOR SELECT
+TO authenticated
+USING (auth.uid() = id);
+
+-- Policy: Allow students to view their assigned tutor's and HOD's profiles
+CREATE POLICY "Allow students to view their assigned tutor's and HOD's profiles"
+ON profiles FOR SELECT
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM students WHERE id = auth.uid() AND tutor_id = profiles.id)) OR
+    (EXISTS (SELECT 1 FROM students WHERE id = auth.uid() AND hod_id = profiles.id))
+);
+
+-- Policy: Allow tutors to view their assigned students' profiles
+CREATE POLICY "Allow tutors to view their assigned students' profiles"
+ON profiles FOR SELECT
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM students WHERE tutor_id = auth.uid() AND id = profiles.id))
+);
+
+-- Policy: Allow HODs to view profiles of students and tutors in their department
+CREATE POLICY "Allow HODs to view profiles of students and tutors in their department"
+ON profiles FOR SELECT
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles AS p_hod WHERE p_hod.id = auth.uid() AND p_hod.role = 'hod' AND p_hod.department_id = profiles.department_id))
+);
+
+-- Policy: Allow Admins and Principals to view all profiles
+CREATE POLICY "Allow Admins and Principals to view all profiles"
+ON profiles FOR SELECT
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'principal')))
+);
+
+-- Policy: Allow Admins to insert new profiles
+CREATE POLICY "Allow Admins to insert new profiles"
+ON profiles FOR INSERT
+TO authenticated
+WITH CHECK (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+);
+
+-- Policy: Allow users to update their own profile
+CREATE POLICY "Allow users to update their own profile"
+ON profiles FOR UPDATE
+TO authenticated
+USING (auth.uid() = id)
+WITH CHECK (auth.uid() = id);
+
+-- Policy: Allow Admins to update any profile
+CREATE POLICY "Allow Admins to update any profile"
+ON profiles FOR UPDATE
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+)
+WITH CHECK (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+);
+
+-- Policy: Allow Admins to delete profiles
+CREATE POLICY "Allow Admins to delete profiles"
+ON profiles FOR DELETE
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+);
+
+
+-- RLS for 'students' table
+-- Enable RLS on the 'students' table
+ALTER TABLE students ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Allow students to view their own student details
+CREATE POLICY "Allow students to view their own student details"
+ON students FOR SELECT
+TO authenticated
+USING (auth.uid() = id);
+
+-- Policy: Allow tutors to view their assigned students' details
+CREATE POLICY "Allow tutors to view their assigned students' details"
+ON students FOR SELECT
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'tutor' AND tutor_id = auth.uid()))
+);
+
+-- Policy: Allow HODs to view students in their department
+CREATE POLICY "Allow HODs to view students in their department"
+ON students FOR SELECT
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'hod' AND department_id = (SELECT department_id FROM batches WHERE id = students.batch_id)))
+);
+
+-- Policy: Allow Admins and Principals to view all students
+CREATE POLICY "Allow Admins and Principals to view all students"
+ON students FOR SELECT
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'principal')))
+);
+
+-- Policy: Allow Admins to insert new student entries
+CREATE POLICY "Allow Admins to insert new student entries"
+ON students FOR INSERT
+TO authenticated
+WITH CHECK (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+);
+
+-- Policy: Allow Admins to update student entries
+CREATE POLICY "Allow Admins to update student entries"
+ON students FOR UPDATE
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+)
+WITH CHECK (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+);
+
+-- Policy: Allow Admins to delete student entries
+CREATE POLICY "Allow Admins to delete student entries"
+ON students FOR DELETE
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+);
+
+
+-- RLS for 'batches' table
+-- Enable RLS on the 'batches' table
+ALTER TABLE batches ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Allow all authenticated users to view all batches (non-sensitive data)
+CREATE POLICY "Allow all authenticated users to view all batches"
+ON batches FOR SELECT
+TO authenticated
+USING (true);
+
+-- Policy: Allow Admins to insert new batches
+CREATE POLICY "Allow Admins to insert new batches"
+ON batches FOR INSERT
+TO authenticated
+WITH CHECK (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+);
+
+-- Policy: Allow Admins to update batches
+CREATE POLICY "Allow Admins to update batches"
+ON batches FOR UPDATE
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+)
+WITH CHECK (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+);
+
+-- Policy: Allow Admins to delete batches
+CREATE POLICY "Allow Admins to delete batches"
+ON batches FOR DELETE
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+);
+
+
+-- RLS for 'departments' table
+-- Enable RLS on the 'departments' table
+ALTER TABLE departments ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Allow all authenticated users to view all departments (non-sensitive data)
+CREATE POLICY "Allow all authenticated users to view all departments"
+ON departments FOR SELECT
+TO authenticated
+USING (true);
+
+-- Policy: Allow Admins to insert new departments
+CREATE POLICY "Allow Admins to insert new departments"
+ON departments FOR INSERT
+TO authenticated
+WITH CHECK (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+);
+
+-- Policy: Allow Admins to update departments
+CREATE POLICY "Allow Admins to update departments"
+ON departments FOR UPDATE
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+)
+WITH CHECK (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+);
+
+-- Policy: Allow Admins to delete departments
+CREATE POLICY "Allow Admins to delete departments"
+ON departments FOR DELETE
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+);
+
+
+-- RLS for 'requests' table
+-- Enable RLS on the 'requests' table
+ALTER TABLE requests ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Allow students to view their own requests
+CREATE POLICY "Allow students to view their own requests"
+ON requests FOR SELECT
+TO authenticated
+USING (student_id = auth.uid());
+
+-- Policy: Allow tutors to view requests from their assigned students
+CREATE POLICY "Allow tutors to view requests from their assigned students"
+ON requests FOR SELECT
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM students WHERE id = requests.student_id AND tutor_id = auth.uid()))
+);
+
+-- Policy: Allow HODs to view requests from students in their department
+CREATE POLICY "Allow HODs to view requests from students in their department"
+ON requests FOR SELECT
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles AS p_hod WHERE p_hod.id = auth.uid() AND p_hod.role = 'hod' AND p_hod.department_id = (SELECT department_id FROM batches WHERE id = (SELECT batch_id FROM students WHERE id = requests.student_id))))
+);
+
+-- Policy: Allow Admins and Principals to view all requests
+CREATE POLICY "Allow Admins and Principals to view all requests"
+ON requests FOR SELECT
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'principal')))
+);
+
+-- Policy: Allow students to insert their own requests
+CREATE POLICY "Allow students to insert their own requests"
+ON requests FOR INSERT
+TO authenticated
+WITH CHECK (student_id = auth.uid());
+
+-- Policy: Allow students to update their own returned requests
+CREATE POLICY "Allow students to update their own returned requests"
+ON requests FOR UPDATE
+TO authenticated
+USING (student_id = auth.uid() AND status LIKE 'Returned%')
+WITH CHECK (student_id = auth.uid() AND status LIKE 'Returned%');
+
+-- Policy: Allow tutors to update requests pending their approval
+CREATE POLICY "Allow tutors to update requests pending their approval"
+ON requests FOR UPDATE
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM students WHERE id = requests.student_id AND tutor_id = auth.uid())) AND status = 'Pending Tutor Approval'
+)
+WITH CHECK (
+    (EXISTS (SELECT 1 FROM students WHERE id = requests.student_id AND tutor_id = auth.uid())) AND status = 'Pending Tutor Approval'
+);
+
+-- Policy: Allow HODs to update requests pending their approval
+CREATE POLICY "Allow HODs to update requests pending their approval"
+ON requests FOR UPDATE
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles AS p_hod WHERE p_hod.id = auth.uid() AND p_hod.role = 'hod' AND p_hod.department_id = (SELECT department_id FROM batches WHERE id = (SELECT batch_id FROM students WHERE id = requests.student_id)))) AND status = 'Pending HOD Approval'
+)
+WITH CHECK (
+    (EXISTS (SELECT 1 FROM profiles AS p_hod WHERE p_hod.id = auth.uid() AND p_hod.role = 'hod' AND p_hod.department_id = (SELECT department_id FROM batches WHERE id = (SELECT batch_id FROM students WHERE id = requests.student_id)))) AND status = 'Pending HOD Approval'
+);
+
+-- Policy: Allow Admins to update requests pending their approval
+CREATE POLICY "Allow Admins to update requests pending their approval"
+ON requests FOR UPDATE
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')) AND status = 'Pending Admin Approval'
+)
+WITH CHECK (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')) AND status = 'Pending Admin Approval'
+);
+
+-- Policy: Allow Principals to update requests pending their approval
+CREATE POLICY "Allow Principals to update requests pending their approval"
+ON requests FOR UPDATE
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'principal')) AND status = 'Pending Principal Approval'
+)
+WITH CHECK (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'principal')) AND status = 'Pending Principal Approval'
+);
+
+-- Policy: Allow Admins to delete any request
+CREATE POLICY "Allow Admins to delete any request"
+ON requests FOR DELETE
+TO authenticated
+USING (
+    (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'))
+);
+
+-- Policy: Allow students to delete their own returned requests
+CREATE POLICY "Allow students to delete their own returned requests"
+ON requests FOR DELETE
+TO authenticated
+USING (student_id = auth.uid() AND status LIKE 'Returned%');
