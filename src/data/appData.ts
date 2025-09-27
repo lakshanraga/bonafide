@@ -39,111 +39,55 @@ export const fetchProfiles = async (role?: string): Promise<Profile[]> => {
 export const fetchStudentDetails = async (studentId: string): Promise<StudentDetails | null> => {
   console.log("Dyad Debug: Starting fetchStudentDetails for ID:", studentId);
 
-  // 1. Fetch the base profile data for the student
-  const { data: profileData, error: profileError } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", studentId)
-    .single();
-
-  if (profileError || !profileData) {
-    console.error("Dyad Debug: Error fetching student profile:", profileError);
-    // If RLS prevents access or data is missing, return null instead of throwing
-    return null;
-  }
-  console.log("Dyad Debug: Fetched profileData:", profileData);
-
-  // 2. Fetch the student-specific details (register_number, parent_name, and IDs for joins)
-  const { data: studentSpecificData, error: studentSpecificError } = await supabase
+  const { data: studentData, error: studentError } = await supabase
     .from("students")
     .select(`
-      register_number,
-      parent_name,
-      batch_id,
-      tutor_id,
-      hod_id
+      *, // Select all from students table (id, register_number, parent_name, batch_id, tutor_id, hod_id)
+      profiles!id(id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at), // Student's own profile
+      batches(name, section, current_semester, departments(name)), // Batch and its department
+      tutor_profile:profiles!students_tutor_id_fkey(id, first_name, last_name), // Tutor's profile
+      hod_profile:profiles!students_hod_id_fkey(id, first_name, last_name) // HOD's profile
     `)
     .eq("id", studentId)
     .single();
 
-  if (studentSpecificError || !studentSpecificData) {
-    console.error("Dyad Debug: Error fetching student-specific data:", studentSpecificError);
-    // If RLS prevents access or data is missing, return null instead of throwing
+  if (studentError || !studentData) {
+    console.error("Dyad Debug: Error fetching student details:", studentError);
     return null;
   }
-  console.log("Dyad Debug: Fetched studentSpecificData (with IDs):", studentSpecificData);
+  console.log("Dyad Debug: Fetched studentData:", studentData);
 
-  const { batch_id, tutor_id, hod_id } = studentSpecificData;
-
-  let batch: Batch | null = null;
-  let department: Department | null = null;
-  let tutor: Profile | null = null;
-  let hod: Profile | null = null;
-
-  // 3. Fetch Batch details
-  if (batch_id) {
-    const { data: batchData, error: batchError } = await supabase
-      .from("batches")
-      .select(`*, departments(id, name)`) // This is correct for fetching department name
-      .eq("id", batch_id)
-      .single();
-    if (batchError) {
-      console.warn("Dyad Debug: Error fetching batch details:", batchError);
-    } else {
-      batch = batchData as Batch;
-      department = batchData.departments as Department;
-      console.log("Dyad Debug: Fetched batchData:", batch);
-      console.log("Dyad Debug: Fetched departmentData:", department);
-    }
-  } else {
-    console.log("Dyad Debug: No batch_id found for student.");
-  }
-
-  // 4. Fetch Tutor profile
-  if (tutor_id) {
-    const { data: tutorData, error: tutorError } = await supabase
-      .from("profiles")
-      .select(`id, first_name, last_name`)
-      .eq("id", tutor_id)
-      .single();
-    if (tutorError) {
-      console.warn("Dyad Debug: Error fetching tutor profile:", tutorError);
-    } else {
-      tutor = tutorData as Profile;
-      console.log("Dyad Debug: Fetched tutorData:", tutor);
-    }
-  } else {
-    console.log("Dyad Debug: No tutor_id found for student.");
-  }
-
-  // 5. Fetch HOD profile
-  if (hod_id) {
-    const { data: hodData, error: hodError } = await supabase
-      .from("profiles")
-      .select(`id, first_name, last_name`)
-      .eq("id", hod_id)
-      .single();
-    if (hodError) {
-      console.warn("Dyad Debug: Error fetching HOD profile:", hodError);
-    } else {
-      hod = hodData as Profile;
-      console.log("Dyad Debug: Fetched hodData:", hod);
-    }
-  } else {
-    console.log("Dyad Debug: No hod_id found for student.");
-  }
+  const profile = studentData.profiles;
+  const batch = studentData.batches;
+  const department = batch?.departments;
+  const tutor = studentData.tutor_profile;
+  const hod = studentData.hod_profile;
 
   return {
-    ...profileData,
-    register_number: studentSpecificData.register_number,
-    parent_name: studentSpecificData.parent_name,
+    id: studentData.id,
+    first_name: profile?.first_name,
+    last_name: profile?.last_name,
+    username: profile?.username,
+    email: profile?.email,
+    phone_number: profile?.phone_number,
+    avatar_url: profile?.avatar_url,
+    role: profile?.role,
+    created_at: profile?.created_at,
+    updated_at: profile?.updated_at,
+
+    register_number: studentData.register_number,
+    parent_name: studentData.parent_name,
+    
     batch_id: batch?.id,
     batch_name: batch ? `${batch.name} ${batch.section || ''}`.trim() : undefined,
     current_semester: batch?.current_semester,
+    
     department_id: department?.id,
     department_name: department?.name,
+    
     tutor_id: tutor?.id,
     tutor_name: tutor ? `${tutor.first_name} ${tutor.last_name || ''}`.trim() : undefined,
+    
     hod_id: hod?.id,
     hod_name: hod ? `${hod.first_name} ${hod.last_name || ''}`.trim() : undefined,
   } as StudentDetails;
@@ -482,40 +426,53 @@ export const createStudent = async (profileData: Omit<Profile, 'id' | 'created_a
 
 export const fetchAllStudentsWithDetails = async (): Promise<StudentDetails[]> => {
   const { data, error } = await supabase
-    .from("profiles")
+    .from("students") // Start from the students table
     .select(`
-      id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at,
-      students!inner(register_number, parent_name, batch_id, tutor_id, hod_id),
-      batches(name, section, current_semester, departments(name)),
-      tutors:profiles!students_tutor_id_fkey(id, first_name, last_name),
-      hods:profiles!students_hod_id_fkey(id, first_name, last_name)
-    `)
-    .eq('role', 'student');
+      *, // Select all from students table (id, register_number, parent_name, batch_id, tutor_id, hod_id)
+      profiles!id(id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at), // Student's own profile
+      batches(name, section, current_semester, departments(name)), // Batch and its department
+      tutor_profile:profiles!students_tutor_id_fkey(id, first_name, last_name), // Tutor's profile
+      hod_profile:profiles!students_hod_id_fkey(id, first_name, last_name) // HOD's profile
+    `);
 
   if (error) {
     console.error("Error fetching all students with details:", error);
     throw new Error("Failed to fetch all students with details: " + error.message);
   }
 
-  return data.map((profile: any) => {
-    const studentData = profile.students[0];
-    const batch = profile.batches;
+  return data.map((studentRow: any) => {
+    const profile = studentRow.profiles;
+    const batch = studentRow.batches;
     const department = batch?.departments;
-    const tutor = profile.tutors;
-    const hod = profile.hods;
+    const tutor = studentRow.tutor_profile;
+    const hod = studentRow.hod_profile;
 
     return {
-      ...profile,
-      register_number: studentData?.register_number,
-      parent_name: studentData?.parent_name,
-      batch_id: batch?.id,
+      id: studentRow.id, // Student's UUID from the 'students' table (which is also their profile ID)
+      first_name: profile?.first_name,
+      last_name: profile?.last_name,
+      username: profile?.username,
+      email: profile?.email,
+      phone_number: profile?.phone_number,
+      avatar_url: profile?.avatar_url,
+      role: profile?.role,
+      created_at: profile?.created_at,
+      updated_at: profile?.updated_at,
+
+      register_number: studentRow.register_number,
+      parent_name: studentRow.parent_name,
+      
+      batch_id: batch?.id, // Use batch.id from the joined batch
       batch_name: batch ? `${batch.name} ${batch.section || ''}`.trim() : undefined,
       current_semester: batch?.current_semester,
-      department_id: department?.id,
+      
+      department_id: department?.id, // Use department.id from the joined department
       department_name: department?.name,
+      
       tutor_id: tutor?.id,
       tutor_name: tutor ? `${tutor.first_name} ${tutor.last_name || ''}`.trim() : undefined,
-      hod_id: hod?.id, // Corrected: This should be the ID, not the name
+      
+      hod_id: hod?.id,
       hod_name: hod ? `${hod.first_name} ${hod.last_name || ''}`.trim() : undefined,
     } as StudentDetails;
   });
