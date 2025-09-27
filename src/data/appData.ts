@@ -485,7 +485,7 @@ export const fetchAllStudentsWithDetails = async (): Promise<StudentDetails[]> =
     .from("profiles")
     .select(`
       id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at,
-      students(register_number, parent_name, batch_id, tutor_id, hod_id),
+      students!inner(register_number, parent_name, batch_id, tutor_id, hod_id),
       batches(name, section, current_semester, departments(name)),
       tutors:profiles!students_tutor_id_fkey(first_name, last_name),
       hods:profiles!students_hod_id_fkey(first_name, last_name)
