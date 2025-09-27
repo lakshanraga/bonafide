@@ -1,0 +1,15 @@
+-- Policy for `SELECT` (for `authenticated` role)
+-- Name: Enable read access for authenticated users based on role
+-- Target roles: authenticated
+-- USING expression:
+(id = auth.uid())
+OR
+(auth.role() = 'tutor' AND id IN (SELECT id FROM students WHERE tutor_id = auth.uid()))
+OR
+(auth.role() = 'hod' AND id IN (SELECT s.id FROM students s JOIN batches b ON s.batch_id = b.id WHERE b.department_id = (SELECT department_id FROM profiles WHERE id = auth.uid())))
+OR
+(auth.role() = 'hod' AND id IN (SELECT id FROM profiles WHERE role = 'tutor' AND department_id = (SELECT department_id FROM profiles WHERE id = auth.uid())))
+OR
+(auth.role() = 'admin')
+OR
+(auth.role() = 'principal')
