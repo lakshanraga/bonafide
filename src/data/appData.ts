@@ -389,22 +389,67 @@ interface NewStudentDetailsPayload {
   hod_id?: string;
 }
 
-export const createStudent = async (profileData: Omit<Profile, 'id' | 'created_at' | 'updated_at'>, studentData: NewStudentDetailsPayload): Promise<StudentDetails | null> => {
+export const createStudent = async (profileData: Omit<Profile, 'id' | 'created_at' | 'updated_at'>, studentData: NewStudentDetailsPayload, password: string): Promise<StudentDetails | null> => {
+  // 1. Create an auth user
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: profileData.email!, // Email is required for signup
+    password: password,
+    options: {
+      data: {
+        first_name: profileData.first_name,
+        last_name: profile.last_name,
+        username: profileData.username,
+        role: 'student',
+        department_id: profileData.department_id,
+        batch_id: profileData.batch_id,
+        phone_number: profileData.phone_number,
+      },
+    },
+  });
+
+  if (authError) {
+    console.error("Error creating auth user for student:", authError);
+    showError("Failed to create student account: " + authError.message);
+    return null;
+  }
+
+  if (!authData.user) {
+    console.error("Auth user not returned after signup.");
+    showError("Failed to create student account: User data missing.");
+    return null;
+  }
+
+  const userId = authData.user.id;
+
+  // 2. Insert into profiles table (if not automatically handled by a trigger)
+  // Assuming a trigger exists to create a profile on auth.users insert,
+  // we will only update it if necessary, or rely on the trigger.
+  // For now, we'll explicitly insert to ensure the profile exists with all data.
+  // In a real app, you'd typically have a trigger for this.
   const { data: newProfile, error: profileError } = await supabase
     .from("profiles")
-    .insert({ ...profileData, role: 'student' })
+    .insert({
+      id: userId, // Use the auth user's ID
+      ...profileData,
+      role: 'student',
+    })
     .select()
     .single();
 
   if (profileError || !newProfile) {
     console.error("Error creating student profile:", profileError);
+    // Attempt to delete the auth user if profile creation fails
+    await supabase.auth.admin.deleteUser(userId); // Requires service role key, which is not available client-side.
+                                                // This is a limitation for client-side admin functions.
+    showError("Failed to create student profile: " + profileError.message);
     return null;
   }
 
+  // 3. Insert into students table
   const { data: newStudent, error: studentError } = await supabase
     .from("students")
     .insert({
-      id: newProfile.id,
+      id: userId, // Use the auth user's ID
       register_number: studentData.register_number,
       parent_name: studentData.parent_name,
       batch_id: studentData.batch_id,
@@ -416,8 +461,11 @@ export const createStudent = async (profileData: Omit<Profile, 'id' | 'created_a
 
   if (studentError || !newStudent) {
     console.error("Error creating student entry:", studentError);
-    // Optionally, roll back profile creation here
-    await supabase.from("profiles").delete().eq("id", newProfile.id);
+    // Attempt to roll back profile creation if student entry fails
+    await supabase.from("profiles").delete().eq("id", userId);
+    // Attempt to delete the auth user (again, client-side limitation)
+    await supabase.auth.admin.deleteUser(userId);
+    showError("Failed to create student details: " + studentError.message);
     return null;
   }
 

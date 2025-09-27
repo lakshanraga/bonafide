@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Eye, EyeOff } from "lucide-react"; // Import Eye icons
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ const formSchema = z.object({
   parent_name: z.string().optional(),
   department_id: z.string().min(1, { message: "Department is required." }),
   batch_id: z.string().min(1, { message: "Batch is required." }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters." }), // New password field
 });
 
 interface AddSingleStudentFormProps {
@@ -57,6 +59,7 @@ const AddSingleStudentForm = ({
   onCancel,
 }: AddSingleStudentFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // State for password visibility
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -70,6 +73,7 @@ const AddSingleStudentForm = ({
       parent_name: "",
       department_id: "",
       batch_id: "",
+      password: "", // Default for new password field
     },
   });
 
@@ -112,7 +116,8 @@ const AddSingleStudentForm = ({
         batch_id: values.batch_id,
         tutor_id: selectedBatch?.tutor_id, // Assign batch's tutor
         hod_id: departmentHod?.id, // Assign department's HOD
-      }
+      },
+      values.password // Pass the new password
     );
 
     if (newStudent) {
@@ -265,6 +270,42 @@ const AddSingleStudentForm = ({
                   ))}
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {/* New Password Field */}
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Set initial password"
+                    {...field}
+                    disabled={loading}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-primary/10"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    disabled={loading}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    <span className="sr-only">Toggle password visibility</span>
+                  </Button>
+                </div>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
