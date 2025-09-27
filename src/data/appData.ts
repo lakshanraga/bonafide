@@ -8,7 +8,7 @@ import {
   StudentDetails,
   TutorDetails,
   HodDetails,
-  RequestStatus, // Imported RequestStatus
+  RequestStatus,
 } from "@/lib/types";
 import { showError } from "@/utils/toast";
 
@@ -42,11 +42,11 @@ export const fetchStudentDetails = async (studentId: string): Promise<StudentDet
   const { data: studentData, error: studentError } = await supabase
     .from("students")
     .select(`
-      *, // Select all from students table (id, register_number, parent_name, batch_id, tutor_id, hod_id)
-      profiles!id(id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at), // Student's own profile
-      batches(name, section, current_semester, departments(name)), // Batch and its department
-      tutor_profile:profiles!students_tutor_id_fkey(id, first_name, last_name), // Tutor's profile
-      hod_profile:profiles!students_hod_id_fkey(id, first_name, last_name) // HOD's profile
+      *,
+      profiles!id(id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at),
+      batches(name, section, current_semester, departments(name)),
+      tutor_profile:profiles!students_tutor_id_fkey(id, first_name, last_name),
+      hod_profile:profiles!students_hod_id_fkey(id, first_name, last_name)
     `)
     .eq("id", studentId)
     .single();
@@ -428,11 +428,11 @@ export const fetchAllStudentsWithDetails = async (): Promise<StudentDetails[]> =
   const { data, error } = await supabase
     .from("students") // Start from the students table
     .select(`
-      *, // Select all from students table (id, register_number, parent_name, batch_id, tutor_id, hod_id)
-      profiles!id(id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at), // Student's own profile
-      batches(name, section, current_semester, departments(name)), // Batch and its department
-      tutor_profile:profiles!students_tutor_id_fkey(id, first_name, last_name), // Tutor's profile
-      hod_profile:profiles!students_hod_id_fkey(id, first_name, last_name) // HOD's profile
+      *,
+      profiles!id(id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at),
+      batches(name, section, current_semester, departments(name)),
+      tutor_profile:profiles!students_tutor_id_fkey(id, first_name, last_name),
+      hod_profile:profiles!students_hod_id_fkey(id, first_name, last_name)
     `);
 
   if (error) {
