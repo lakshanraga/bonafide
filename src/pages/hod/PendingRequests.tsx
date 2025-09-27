@@ -40,7 +40,7 @@ import { useSession } from "@/components/auth/SessionContextProvider";
 import { supabase } from "@/integrations/supabase/client";
 
 const HodPendingRequests = () => {
-  const { user, profile } = useSession();
+  const { user, profile, loading: sessionLoading } = useSession();
   const [requests, setRequests] = useState<BonafideRequest[]>([]);
   const [selectedRequest, setSelectedRequest] =
     useState<BonafideRequest | null>(null);
@@ -50,11 +50,21 @@ const HodPendingRequests = () => {
   const [returnReason, setReturnReason] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [componentLoading, setComponentLoading] = useState(true); // Renamed to avoid conflict
 
   const fetchHodRequests = async () => {
-    if (user?.id && profile?.department_id) {
-      setLoading(true);
+    if (sessionLoading) { // Wait for session to load
+      return;
+    }
+
+    if (!user?.id || !profile?.department_id) { // If no user/profile after session loads, stop loading
+      setRequests([]);
+      setComponentLoading(false);
+      return;
+    }
+
+    setComponentLoading(true); // Start loading for this component's data
+    try {
       // Fetch pending requests for students in HOD's department (RLS will filter)
       const { data: requestsData, error: requestsError } = await supabase
         .from('requests')
@@ -70,13 +80,18 @@ const HodPendingRequests = () => {
 
       const fetchedTemplates = await fetchTemplates();
       setTemplates(fetchedTemplates);
-      setLoading(false);
+    } catch (error: any) {
+      showError("Failed to fetch HOD pending requests: " + error.message);
+      setRequests([]);
+      setTemplates([]);
+    } finally {
+      setComponentLoading(false); // Always stop loading
     }
   };
 
   useEffect(() => {
     fetchHodRequests();
-  }, [user, profile?.department_id]);
+  }, [user, profile?.department_id, sessionLoading]); // Depend on user, profile, and sessionLoading
 
   const handleForward = async () => {
     if (!selectedRequest || !selectedTemplate) return;
@@ -111,7 +126,7 @@ const HodPendingRequests = () => {
     setIsReviewOpen(true);
   };
 
-  if (loading) {
+  if (componentLoading || sessionLoading) { // Show loading if session is loading or component data is loading
     return (
       <Card>
         <CardHeader>

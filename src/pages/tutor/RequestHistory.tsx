@@ -29,16 +29,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { showError } from "@/utils/toast";
 
 const TutorRequestHistory = () => {
-  const { user } = useSession();
+  const { user, loading: sessionLoading } = useSession();
   const [allRequests, setAllRequests] = useState<BonafideRequest[]>([]);
   const [studentsInCharge, setStudentsInCharge] = useState<StudentDetails[]>([]);
   const [selectedSemester, setSelectedSemester] = useState("all");
-  const [loading, setLoading] = useState(true);
+  const [componentLoading, setComponentLoading] = useState(true); // Renamed to avoid conflict
 
   useEffect(() => {
     const fetchData = async () => {
-      if (user?.id) {
-        setLoading(true);
+      if (sessionLoading) { // Wait for session to load
+        return;
+      }
+
+      if (!user?.id) { // If no user after session loads, stop loading
+        setAllRequests([]);
+        setStudentsInCharge([]);
+        setComponentLoading(false);
+        return;
+      }
+
+      setComponentLoading(true); // Start loading for this component's data
+      try {
         // Fetch students assigned to this tutor
         const { data: studentsData, error: studentsError } = await supabase
           .from('students')
@@ -48,7 +59,6 @@ const TutorRequestHistory = () => {
         if (studentsError) {
           showError("Error fetching assigned students: " + studentsError.message);
           setStudentsInCharge([]);
-          setLoading(false);
           return;
         }
 
@@ -56,7 +66,6 @@ const TutorRequestHistory = () => {
         if (studentIds.length === 0) {
           setAllRequests([]);
           setStudentsInCharge([]);
-          setLoading(false);
           return;
         }
 
@@ -78,11 +87,16 @@ const TutorRequestHistory = () => {
         } else {
           setAllRequests(requestsData as BonafideRequest[]);
         }
-        setLoading(false);
+      } catch (error: any) {
+        showError("Failed to fetch request history: " + error.message);
+        setAllRequests([]);
+        setStudentsInCharge([]);
+      } finally {
+        setComponentLoading(false); // Always stop loading
       }
     };
     fetchData();
-  }, [user]);
+  }, [user, sessionLoading]); // Depend on user and sessionLoading
 
   const filteredHistory = allRequests.filter((request) => {
     if (selectedSemester === "all") return true;
@@ -92,7 +106,7 @@ const TutorRequestHistory = () => {
     return student?.current_semester === Number(selectedSemester);
   });
 
-  if (loading) {
+  if (componentLoading || sessionLoading) { // Show loading if session is loading or component data is loading
     return (
       <Card>
         <CardHeader>

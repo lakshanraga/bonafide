@@ -20,14 +20,24 @@ import { showError } from "@/utils/toast";
 import { fetchStudentDetails } from "@/data/appData"; // Import fetchStudentDetails
 
 const TutorStudents = () => {
-  const { user } = useSession();
+  const { user, loading: sessionLoading } = useSession();
   const [assignedStudents, setAssignedStudents] = useState<StudentDetails[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [componentLoading, setComponentLoading] = useState(true); // Renamed to avoid conflict
 
   useEffect(() => {
     const fetchAssignedStudents = async () => {
-      if (user?.id) {
-        setLoading(true);
+      if (sessionLoading) { // Wait for session to load
+        return;
+      }
+
+      if (!user?.id) { // If no user after session loads, stop loading and show no students
+        setAssignedStudents([]);
+        setComponentLoading(false);
+        return;
+      }
+
+      setComponentLoading(true); // Start loading for this component's data
+      try {
         // First, fetch only the IDs of students assigned to this tutor
         const { data: studentIdsData, error: studentIdsError } = await supabase
           .from('students')
@@ -37,7 +47,6 @@ const TutorStudents = () => {
         if (studentIdsError) {
           showError("Error fetching assigned student IDs: " + studentIdsError.message);
           setAssignedStudents([]);
-          setLoading(false);
           return;
         }
 
@@ -45,7 +54,6 @@ const TutorStudents = () => {
 
         if (studentIds.length === 0) {
           setAssignedStudents([]);
-          setLoading(false);
           return;
         }
 
@@ -54,13 +62,17 @@ const TutorStudents = () => {
         const detailedStudents = await Promise.all(detailedStudentsPromises);
         setAssignedStudents(detailedStudents.filter(s => s !== null) as StudentDetails[]);
         
-        setLoading(false);
+      } catch (error: any) {
+        showError("Failed to fetch assigned students: " + error.message);
+        setAssignedStudents([]);
+      } finally {
+        setComponentLoading(false); // Always stop loading
       }
     };
     fetchAssignedStudents();
-  }, [user]);
+  }, [user, sessionLoading]); // Depend on user and sessionLoading
 
-  if (loading) {
+  if (componentLoading || sessionLoading) { // Show loading if session is loading or component data is loading
     return (
       <Card>
         <CardHeader>

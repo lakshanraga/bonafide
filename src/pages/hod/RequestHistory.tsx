@@ -29,19 +29,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { showError } from "@/utils/toast";
 
 const HodRequestHistory = () => {
-  const { user, profile } = useSession();
+  const { user, profile, loading: sessionLoading } = useSession();
   const [allRequests, setAllRequests] = useState<BonafideRequest[]>([]);
   const [allBatches, setAllBatches] = useState<Batch[]>([]);
   const [allStudents, setAllStudents] = useState<StudentDetails[]>([]);
   const [selectedBatch, setSelectedBatch] = useState("all");
   const [selectedSemester, setSelectedSemester] = useState("all");
-  const [loading, setLoading] = useState(true);
+  const [componentLoading, setComponentLoading] = useState(true); // Renamed to avoid conflict
 
   useEffect(() => {
     const fetchData = async () => {
-      if (user?.id && profile?.department_id) {
-        setLoading(true);
+      if (sessionLoading) { // Wait for session to load
+        return;
+      }
 
+      if (!user?.id || !profile?.department_id) { // If no user/profile after session loads, stop loading
+        setAllBatches([]);
+        setAllStudents([]);
+        setAllRequests([]);
+        setComponentLoading(false);
+        return;
+      }
+
+      setComponentLoading(true); // Start loading for this component's data
+      try {
         // Fetch batches for HOD's department (RLS will filter)
         const { data: batchesData, error: batchesError } = await supabase
           .from('batches')
@@ -52,7 +63,6 @@ const HodRequestHistory = () => {
           setAllBatches([]);
           setAllStudents([]);
           setAllRequests([]);
-          setLoading(false);
           return;
         }
         setAllBatches(batchesData as Batch[]);
@@ -66,7 +76,6 @@ const HodRequestHistory = () => {
           showError("Error fetching student IDs for department: " + studentIdsError.message);
           setAllStudents([]);
           setAllRequests([]);
-          setLoading(false);
           return;
         }
 
@@ -74,7 +83,6 @@ const HodRequestHistory = () => {
         if (studentIds.length === 0) {
           setAllStudents([]);
           setAllRequests([]);
-          setLoading(false);
           return;
         }
 
@@ -97,11 +105,17 @@ const HodRequestHistory = () => {
         } else {
           setAllRequests(requestsData as BonafideRequest[]);
         }
-        setLoading(false);
+      } catch (error: any) {
+        showError("Failed to fetch HOD request history: " + error.message);
+        setAllBatches([]);
+        setAllStudents([]);
+        setAllRequests([]);
+      } finally {
+        setComponentLoading(false); // Always stop loading
       }
     };
     fetchData();
-  }, [user, profile?.department_id]);
+  }, [user, profile?.department_id, sessionLoading]); // Depend on user, profile, and sessionLoading
 
   const uniqueBatches = useMemo(() => {
     const batchNames = allBatches.map((b) =>
@@ -125,7 +139,7 @@ const HodRequestHistory = () => {
     return batchMatch && semesterMatch;
   });
 
-  if (loading) {
+  if (componentLoading || sessionLoading) { // Show loading if session is loading or component data is loading
     return (
       <Card>
         <CardHeader>
