@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -80,35 +80,33 @@ const AddSingleStudentForm = ({
   const selectedDepartmentId = form.watch("department_id");
   const selectedBatchId = form.watch("batch_id");
 
-  const filteredBatches = batches.filter(
-    (batch) => batch.department_id === selectedDepartmentId
-  );
+  const filteredBatches = useMemo(() => {
+    return batches.filter(
+      (batch) => batch.department_id === selectedDepartmentId
+    );
+  }, [batches, selectedDepartmentId]);
 
   useEffect(() => {
-    console.log("Dyad Debug: selectedDepartmentId in useEffect:", selectedDepartmentId);
-    console.log("Dyad Debug: All batches available to form:", batches);
-    console.log("Dyad Debug: Filtered batches for selected department:", filteredBatches);
-
-    if (filteredBatches.length > 0 && !filteredBatches.some(b => b.id === selectedBatchId)) {
-      form.setValue("batch_id", filteredBatches[0].id);
-    } else if (filteredBatches.length === 0) {
+    if (!selectedDepartmentId) {
       form.setValue("batch_id", "");
+      return;
     }
-  }, [selectedDepartmentId, filteredBatches, form, selectedBatchId, batches]);
+
+    // If no batch is selected or current batch doesn't belong to selected department
+    if (!selectedBatchId || !filteredBatches.some(b => b.id === selectedBatchId)) {
+      if (filteredBatches.length > 0) {
+        form.setValue("batch_id", filteredBatches[0].id);
+      } else {
+        form.setValue("batch_id", "");
+      }
+    }
+  }, [selectedDepartmentId, filteredBatches, form, selectedBatchId]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
 
     const selectedBatch = batches.find(b => b.id === values.batch_id);
     const departmentHod = hods.find(h => h.department_id === values.department_id);
-
-    console.log("Dyad Debug: Form values:", values);
-    console.log("Dyad Debug: Selected Department ID:", values.department_id);
-    console.log("Dyad Debug: Selected Batch ID:", values.batch_id);
-    console.log("Dyad Debug: Resolved Batch (from batches array):", selectedBatch);
-    console.log("Dyad Debug: Resolved HOD (from hods array):", departmentHod);
-    console.log("Dyad Debug: Tutor ID from selected batch:", selectedBatch?.tutor_id);
-    console.log("Dyad Debug: HOD ID from department HOD:", departmentHod?.id);
 
 
     const newStudent = await createStudent(
@@ -245,11 +243,8 @@ const AddSingleStudentForm = ({
               <FormItem>
                 <FormLabel>Department</FormLabel>
                 <Select
-                  onValueChange={(value) => {
-                    console.log("Dyad Debug: Department Select onValueChange:", value);
-                    field.onChange(value);
-                  }}
-                  value={field.value} // Changed from defaultValue to value
+                  onValueChange={field.onChange}
+                  value={field.value}
                   disabled={loading}
                 >
                   <FormControl>
@@ -276,11 +271,8 @@ const AddSingleStudentForm = ({
               <FormItem>
                 <FormLabel>Batch</FormLabel>
                 <Select
-                  onValueChange={(value) => {
-                    console.log("Dyad Debug: Batch Select onValueChange:", value);
-                    field.onChange(value);
-                  }}
-                  value={field.value} // Changed from defaultValue to value
+                  onValueChange={field.onChange}
+                  value={field.value}
                   disabled={loading || !selectedDepartmentId}
                 >
                   <FormControl>
