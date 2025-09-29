@@ -48,15 +48,15 @@ export const formatDateToIndian = (dateString: string | undefined): string => {
  * Calculates the current semester for a batch based on its name (e.g., "2023-2027 A") and the current date.
  * Assumes the academic year starts in July.
  * @param batchName The name of the batch.
- * @returns The calculated current semester (1-8).
+ * @returns The calculated current semester (1-8), or 1 if parsing fails.
  */
 export const calculateCurrentSemesterForBatch = (batchName: string): number => {
   const yearPart = batchName.split(" ")[0]; // "2023-2027 A" -> "2023-2027"
   const nameParts = yearPart.split("-");
-  if (nameParts.length !== 2) return 0; // Invalid format
+  if (nameParts.length !== 2) return 1; // Return 1 as a default valid semester if format is invalid
 
   const startYear = parseInt(nameParts[0], 10);
-  if (isNaN(startYear)) return 0; // Invalid year
+  if (isNaN(startYear)) return 1; // Return 1 as a default valid semester if year is invalid
 
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -87,14 +87,27 @@ export const calculateCurrentSemesterForBatch = (batchName: string): number => {
  * Calculates the start and end dates for a given semester of a batch.
  * @param batchName The name of the batch (e.g., "2023-2027 A").
  * @param currentSemester The semester to calculate dates for.
- * @returns An object with `from` and `to` date strings.
+ * @returns An object with `from` and `to` date strings, or default dates if parsing fails.
  */
 export const getSemesterDateRange = (
   batchName: string,
   currentSemester: number
 ): { from: string; to: string } => {
   const yearPart = batchName.split(" ")[0]; // "2023-2027 A" -> "2023-2027"
-  const startYear = parseInt(yearPart.split("-")[0], 10);
+  const nameParts = yearPart.split("-");
+  const startYear = parseInt(nameParts[0], 10);
+
+  // If startYear is invalid, return a default safe range
+  if (isNaN(startYear) || nameParts.length !== 2) {
+    console.warn(`Invalid batchName format or startYear for date range: ${batchName}. Using default dates.`);
+    const defaultDate = new Date();
+    const defaultYear = defaultDate.getFullYear();
+    return {
+      from: new Date(defaultYear, 0, 1).toISOString().split("T")[0],
+      to: new Date(defaultYear, 11, 31).toISOString().split("T")[0],
+    };
+  }
+
   const academicYearOffset = Math.floor((currentSemester - 1) / 2);
   const isOddSemester = currentSemester % 2 !== 0;
 
@@ -111,6 +124,17 @@ export const getSemesterDateRange = (
     const year = startYear + academicYearOffset + 1;
     fromDate = new Date(year, 0, 1); // Jan 1st
     toDate = new Date(year, 5, 30); // June 30th
+  }
+
+  // Double-check if dates are valid before calling toISOString
+  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+    console.error(`Generated invalid date objects for batch: ${batchName}, semester: ${currentSemester}. Using default dates.`);
+    const defaultDate = new Date();
+    const defaultYear = defaultDate.getFullYear();
+    return {
+      from: new Date(defaultYear, 0, 1).toISOString().split("T")[0],
+      to: new Date(defaultYear, 11, 31).toISOString().split("T")[0],
+    };
   }
 
   return {
