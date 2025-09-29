@@ -61,6 +61,17 @@ const AddSingleStudentForm = ({
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Debug information
+  console.log("AddSingleStudentForm props:", {
+    departmentsCount: departments.length,
+    batchesCount: batches.length,
+    tutorsCount: tutors.length,
+    hodsCount: hods.length,
+    departments: departments.map(d => ({ id: d.id, name: d.name })),
+    batches: batches.map(b => ({ id: b.id, name: b.name, department_id: b.department_id })),
+    hods: hods.map(h => ({ id: h.id, name: `${h.first_name} ${h.last_name}`, department_id: h.department_id }))
+  });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -105,39 +116,110 @@ const AddSingleStudentForm = ({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
 
-    const selectedBatch = batches.find(b => b.id === values.batch_id);
-    const departmentHod = hods.find(h => h.department_id === values.department_id);
+    try {
+      // Validate required dependencies
+      const selectedBatch = batches.find(b => b.id === values.batch_id);
+      const departmentHod = hods.find(h => h.department_id === values.department_id);
 
+      if (!selectedBatch) {
+        showError("Selected batch not found. Please select a valid batch.");
+        setLoading(false);
+        return;
+      }
 
-    const newStudent = await createStudent(
-      {
-        first_name: values.first_name,
-        last_name: values.last_name,
-        username: values.username,
-        email: values.email,
-        phone_number: values.phone_number,
-        department_id: values.department_id,
-        batch_id: values.batch_id,
-        role: 'student',
-      },
-      {
-        register_number: values.register_number,
-        parent_name: values.parent_name,
-        batch_id: values.batch_id,
-        tutor_id: selectedBatch?.tutor_id,
-        hod_id: departmentHod?.id,
-      },
-      values.password
-    );
+      if (!departmentHod) {
+        showError("No HOD found for the selected department. Please contact the administrator.");
+        setLoading(false);
+        return;
+      }
 
-    if (newStudent) {
-      showSuccess(`Student ${values.first_name} ${values.last_name || ''} added successfully!`);
-      form.reset();
-      onSuccess();
-    } else {
-      showError("Failed to add student.");
+      // Validate all required fields
+      if (!values.first_name.trim()) {
+        showError("First name is required.");
+        setLoading(false);
+        return;
+      }
+
+      if (!values.username.trim()) {
+        showError("Username is required.");
+        setLoading(false);
+        return;
+      }
+
+      if (!values.email.trim()) {
+        showError("Email is required.");
+        setLoading(false);
+        return;
+      }
+
+      if (!values.register_number.trim()) {
+        showError("Register number is required.");
+        setLoading(false);
+        return;
+      }
+
+      if (!values.password || values.password.length < 6) {
+        showError("Password must be at least 6 characters long.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Creating student with data:", {
+        profileData: {
+          first_name: values.first_name,
+          last_name: values.last_name,
+          username: values.username,
+          email: values.email,
+          phone_number: values.phone_number,
+          department_id: values.department_id,
+          batch_id: values.batch_id,
+          role: 'student',
+        },
+        studentData: {
+          register_number: values.register_number,
+          parent_name: values.parent_name,
+          batch_id: values.batch_id,
+          tutor_id: selectedBatch?.tutor_id,
+          hod_id: departmentHod?.id,
+        },
+        batchInfo: selectedBatch,
+        hodInfo: departmentHod
+      });
+
+      const newStudent = await createStudent(
+        {
+          first_name: values.first_name,
+          last_name: values.last_name,
+          username: values.username,
+          email: values.email,
+          phone_number: values.phone_number,
+          department_id: values.department_id,
+          batch_id: values.batch_id,
+          role: 'student',
+        },
+        {
+          register_number: values.register_number,
+          parent_name: values.parent_name,
+          batch_id: values.batch_id,
+          tutor_id: selectedBatch?.tutor_id,
+          hod_id: departmentHod?.id,
+        },
+        values.password
+      );
+
+      if (newStudent) {
+        showSuccess(`Student ${values.first_name} ${values.last_name || ''} added successfully!`);
+        form.reset();
+        onSuccess();
+      } else {
+        showError("Failed to create student. Please check the form data and try again.");
+      }
+    } catch (error: any) {
+      console.error("Error in form submission:", error);
+      showError("An unexpected error occurred: " + (error.message || "Unknown error"));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
