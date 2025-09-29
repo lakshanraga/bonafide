@@ -50,19 +50,19 @@ import { downloadStudentTemplate, parseStudentFile } from "@/lib/xlsx";
 import { showSuccess, showError } from "@/utils/toast";
 import { StudentDetails, Department, Batch, Profile } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
-import AddSingleStudentForm from "@/components/admin/AddSingleStudentForm"; // New import
+import AddSingleStudentForm from "@/components/admin/AddSingleStudentForm";
 
 const StudentManagement = () => {
   const [allStudents, setAllStudents] = useState<StudentDetails[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [hods, setHods] = useState<Profile[]>([]);
-  const [tutors, setTutors] = useState<Profile[]>([]); // Fetch tutors for the form
+  const [tutors, setTutors] = useState<Profile[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedBatch, setSelectedBatch] = useState("all");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [isAddSingleStudentDialogOpen, setIsAddSingleStudentDialogOpen] = useState(false); // New state
+  const [isAddSingleStudentDialogOpen, setIsAddSingleStudentDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchAllData = async () => {
@@ -72,20 +72,20 @@ const StudentManagement = () => {
       const fetchedDepartments = await fetchDepartments();
       const fetchedBatches = await fetchBatches();
       const fetchedHods = await fetchProfiles('hod');
-      const fetchedTutors = await fetchProfiles('tutor'); // Fetch tutors
+      const fetchedTutors = await fetchProfiles('tutor');
 
       setAllStudents(fetchedStudents);
       setDepartments(fetchedDepartments);
       setBatches(fetchedBatches);
       setHods(fetchedHods);
-      setTutors(fetchedTutors); // Set tutors
+      setTutors(fetchedTutors);
     } catch (error: any) {
       showError(error.message);
-      setAllStudents([]); // Clear data on error
+      setAllStudents([]);
       setDepartments([]);
       setBatches([]);
       setHods([]);
-      setTutors([]); // Clear tutors on error
+      setTutors([]);
     } finally {
       setLoading(false);
     }
@@ -115,7 +115,6 @@ const StudentManagement = () => {
       const parsedStudents = await parseStudentFile(uploadFile);
       const newStudents: StudentDetails[] = [];
       for (const student of parsedStudents) {
-        // Find department and batch IDs based on names from template
         const department = departments.find(d => d.id === student.department_id);
         const batch = batches.find(b => b.id === student.batch_id);
         const hod = hods.find(h => h.department_id === department?.id);
@@ -124,6 +123,9 @@ const StudentManagement = () => {
           console.warn(`Skipping student ${student.register_number} due to missing department or batch.`);
           continue;
         }
+
+        // Generate a default password for bulk uploaded students
+        const defaultPassword = "password123"; // Consider making this configurable or more robust
 
         const newStudent = await createStudent(
           {
@@ -134,15 +136,16 @@ const StudentManagement = () => {
             phone_number: student.phone_number,
             department_id: department.id,
             batch_id: batch.id,
-            role: 'student', // Explicitly set role
+            role: 'student',
           },
           {
             register_number: student.register_number!,
             parent_name: student.parent_name,
             batch_id: batch.id,
-            tutor_id: batch.tutor_id, // Assign batch's tutor as student's tutor
-            hod_id: hod?.id, // Assign correct HOD ID
-          }
+            tutor_id: batch.tutor_id,
+            hod_id: hod?.id,
+          },
+          defaultPassword // Pass the default password
         );
         if (newStudent) {
           newStudents.push(newStudent);
@@ -151,7 +154,7 @@ const StudentManagement = () => {
       showSuccess(`${newStudents.length} students uploaded successfully!`);
       setUploadFile(null);
       setIsUploadDialogOpen(false);
-      fetchAllData(); // Refresh student list
+      fetchAllData();
     } catch (error: any) {
       showError("Failed to parse or upload file: " + error.message);
       console.error(error);
@@ -248,7 +251,6 @@ const StudentManagement = () => {
             </DialogContent>
           </Dialog>
 
-          {/* New: Add Single Student Button and Dialog */}
           <Dialog open={isAddSingleStudentDialogOpen} onOpenChange={setIsAddSingleStudentDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="default">
@@ -267,7 +269,7 @@ const StudentManagement = () => {
                 hods={hods}
                 onSuccess={() => {
                   setIsAddSingleStudentDialogOpen(false);
-                  fetchAllData(); // Refresh student list after successful addition
+                  fetchAllData();
                 }}
                 onCancel={() => setIsAddSingleStudentDialogOpen(false)}
               />
