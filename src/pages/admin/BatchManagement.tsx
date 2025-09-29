@@ -30,7 +30,7 @@ import {
   DialogFooter,
   DialogClose,
   DialogTrigger,
-  DialogDescription, // Import DialogDescription
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,13 +69,9 @@ const BatchManagement = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      console.log("Fetching all data for Batch Management...");
       const fetchedBatches = await fetchBatches();
-      console.log("Fetched Batches:", fetchedBatches);
       const fetchedDepartments = await fetchDepartments();
-      console.log("Fetched Departments:", fetchedDepartments);
       const fetchedTutors = await fetchProfiles('tutor');
-      console.log("Fetched Tutors:", fetchedTutors);
 
       // Process batches to update semester info if needed
       const updatedBatches = fetchedBatches.map((batch) => {
@@ -95,52 +91,19 @@ const BatchManagement = () => {
       setBatches(updatedBatches);
       setDepartments(fetchedDepartments);
       setTutors(fetchedTutors);
-      console.log("Batch Management data fetched successfully.");
     } catch (error: any) {
-      console.error("Error in fetchAllData for Batch Management:", error);
       showError(error.message);
       setBatches([]); // Clear data on error
       setDepartments([]);
       setTutors([]);
     } finally {
       setLoading(false);
-      console.log("Batch Management loading set to false.");
     }
   };
 
   useEffect(() => {
     fetchAllData();
   }, []);
-
-  const groupedBatches = useMemo(() => {
-    return batches.reduce(
-      (acc, batch) => {
-        if (!acc[batch.name]) {
-          acc[batch.name] = [];
-        }
-        acc[batch.name].push(batch);
-        return acc;
-      },
-      {} as Record<string, Batch[]>
-    );
-  }, [batches]);
-
-  const [selectedSections, setSelectedSections] = useState<
-    Record<string, string>
-  >(() => {
-    const initialState: Record<string, string> = {};
-    for (const batchName in groupedBatches) {
-      initialState[batchName] = groupedBatches[batchName][0]?.id || '';
-    }
-    return initialState;
-  });
-
-  const handleSectionChange = (batchName: string, newBatchId: string) => {
-    setSelectedSections((prev) => ({
-      ...prev,
-      [batchName]: newBatchId,
-    }));
-  };
 
   const handleToggleStatus = async (batchId: string) => {
     const batchToUpdate = batches.find((b) => b.id === batchId);
@@ -150,7 +113,7 @@ const BatchManagement = () => {
     const updated = await updateBatch(batchId, { status: newStatus });
 
     if (updated) {
-      showSuccess(`Batch "${batchToUpdate.name}" marked as ${newStatus}.`);
+      showSuccess(`Batch "${batchToUpdate.name} ${batchToUpdate.section || ''}" marked as ${newStatus}.`);
       fetchAllData(); // Refresh data
     } else {
       showError("Failed to update batch status.");
@@ -176,7 +139,7 @@ const BatchManagement = () => {
     const oldTotalSections = originalBatch.total_sections || 1;
     const newTotalSections = editingBatch.total_sections || 1;
 
-    // Update the main batch entry
+    // Update the main batch entry (this specific section's total_sections)
     const updatedMainBatch = await updateBatch(editingBatch.id, {
       total_sections: newTotalSections,
     });
@@ -186,6 +149,7 @@ const BatchManagement = () => {
       return;
     }
 
+    // Logic to add/remove sections based on total_sections change
     if (oldTotalSections !== newTotalSections) {
       const batchName = editingBatch.name;
       const departmentId = editingBatch.department_id;
@@ -201,7 +165,7 @@ const BatchManagement = () => {
             name: batchName,
             section: sectionName,
             tutor_id: null, // Unassigned by default
-            total_sections: newTotalSections,
+            total_sections: newTotalSections, // All sections of this batch name should reflect the new total
             student_count: 0,
             status: "Active",
             current_semester: currentSemester,
@@ -223,6 +187,13 @@ const BatchManagement = () => {
           await supabase.from('batches').delete().eq('id', section.id);
         }
       }
+      // Also update existing sections with the new total_sections value
+      const existingSectionsToUpdate = batches.filter(b =>
+        b.name === batchName && b.department_id === departmentId && b.total_sections !== newTotalSections
+      );
+      for (const section of existingSectionsToUpdate) {
+        await updateBatch(section.id, { total_sections: newTotalSections });
+      }
     }
 
     showSuccess(`Batch "${editingBatch.name}" updated successfully.`);
@@ -243,7 +214,7 @@ const BatchManagement = () => {
 
     if (updated) {
       showSuccess(
-        `Semester details for "${editingBatch.name} - ${
+        `Semester details for "${editingBatch.name} ${
           editingBatch.section || ""
         }" updated successfully.`
       );
@@ -396,7 +367,6 @@ const BatchManagement = () => {
                 <TableHead>Department</TableHead>
                 <TableHead>Batch</TableHead>
                 <TableHead>Section</TableHead>
-                <TableHead>Total Sections</TableHead>
                 <TableHead>Assigned Tutor</TableHead>
                 <TableHead>Current Sem</TableHead>
                 <TableHead>Semester Start</TableHead>
@@ -406,69 +376,34 @@ const BatchManagement = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {Object.keys(groupedBatches).map((batchName) => {
-                const sections = groupedBatches[batchName];
-                const selectedBatchId =
-                  selectedSections[batchName] || sections[0]?.id;
-                const selectedBatchData =
-                  batches.find((b) => b.id === selectedBatchId) || sections[0];
-
-                if (!selectedBatchData) return null;
-
+              {batches.map((batch) => { // Iterate directly over batches
                 const department = departments.find(
-                  (d) => d.id === selectedBatchData.department_id
+                  (d) => d.id === batch.department_id
                 );
-                const assignedTutor = tutors.find(t => t.id === selectedBatchData.tutor_id);
+                const assignedTutor = tutors.find(t => t.id === batch.tutor_id);
 
                 return (
-                  <TableRow key={batchName}>
+                  <TableRow key={batch.id}> {/* Use batch.id as key */}
                     <TableCell>{department?.name || "N/A"}</TableCell>
-                    <TableCell className="font-medium">{batchName}</TableCell>
-                    <TableCell>
-                      {sections.length > 1 ? (
-                        <Select
-                          value={selectedBatchData.id}
-                          onValueChange={(value) =>
-                            handleSectionChange(batchName, value)
-                          }
-                        >
-                          <SelectTrigger className="w-[80px]">
-                            <SelectValue>
-                              {selectedBatchData.section}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {sections.map((section) => (
-                              <SelectItem key={section.id} value={section.id}>
-                                {section.section}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        selectedBatchData.section || "N/A"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {selectedBatchData.total_sections || 1}
-                    </TableCell>
+                    <TableCell className="font-medium">{batch.name}</TableCell>
+                    <TableCell>{batch.section || "N/A"}</TableCell> {/* Display section directly */}
                     <TableCell>{assignedTutor ? `${assignedTutor.first_name} ${assignedTutor.last_name || ''}`.trim() : "Unassigned"}</TableCell>
-                    <TableCell>{selectedBatchData.current_semester}</TableCell>
+                    <TableCell>{batch.current_semester}</TableCell>
                     <TableCell>
-                      {formatDateToIndian(selectedBatchData.semester_from_date)}
+                      {formatDateToIndian(batch.semester_from_date)}
                     </TableCell>
                     <TableCell>
-                      {formatDateToIndian(selectedBatchData.semester_to_date)}
+                      {formatDateToIndian(batch.semester_to_date)}
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant={
-                          selectedBatchData.status === "Active"
+                          batch.status === "Active"
                             ? "success"
                             : "secondary"
                         }
                       >
-                        {selectedBatchData.status}
+                        {batch.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -481,24 +416,24 @@ const BatchManagement = () => {
                         <DropdownMenuContent>
                           <DropdownMenuItem
                             onClick={() =>
-                              handleOpenEditDialog(selectedBatchData)
+                              handleOpenEditDialog(batch)
                             }
                           >
                             Edit Batch Details
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
-                              handleOpenSemesterDialog(selectedBatchData)
+                              handleOpenSemesterDialog(batch)
                             }
                           >
                             Edit Semester
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
-                              handleToggleStatus(selectedBatchData.id)
+                              handleToggleStatus(batch.id)
                             }
                           >
-                            {selectedBatchData.status === "Active"
+                            {batch.status === "Active"
                               ? "Mark as Inactive"
                               : "Mark as Active"}
                           </DropdownMenuItem>
@@ -517,9 +452,9 @@ const BatchManagement = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Edit Batch: {editingBatch?.name}
+              Edit Batch: {editingBatch?.name} {editingBatch?.section}
             </DialogTitle>
-            <DialogDescription>Adjust the details for this batch.</DialogDescription>
+            <DialogDescription>Adjust the details for this batch section. Changing 'Total Sections' will affect all sections of this batch name.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -585,7 +520,7 @@ const BatchManagement = () => {
                   <SelectValue placeholder="Select a tutor" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unassigned-tutor">Unassigned</SelectItem> {/* Changed value */}
+                  <SelectItem value="unassigned-tutor">Unassigned</SelectItem>
                   {tutors
                     .filter(
                       (tutor) =>
