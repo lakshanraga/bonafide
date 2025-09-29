@@ -8,7 +8,8 @@ interface ProfileFieldProps {
 const ProfileField = ({ label, children }: ProfileFieldProps) => (
   <div>
     <p className="text-sm text-muted-foreground">{label}</p>
-    <p className="text-base font-medium">{children}</p>
+    {/* Changed from <p> to <div> to allow block-level children like Badge */}
+    <div className="text-base font-medium">{children}</div>
   </div>
 );
 
