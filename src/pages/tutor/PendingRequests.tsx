@@ -24,9 +24,9 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchRequests, updateRequestStatus } from "@/data/appData";
+import { fetchRequests, updateRequestStatus, fetchAllStudentsWithDetails } from "@/data/appData";
 import { formatDateToIndian } from "@/lib/utils";
-import { BonafideRequest } from "@/lib/types";
+import { BonafideRequest, StudentDetails } from "@/lib/types";
 import { showSuccess, showError } from "@/utils/toast";
 import RequestDetailsView from "@/components/shared/RequestDetailsView";
 import { useSession } from "@/components/auth/SessionContextProvider";
@@ -35,6 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 const TutorPendingRequests = () => {
   const { user } = useSession();
   const [requests, setRequests] = useState<BonafideRequest[]>([]);
+  const [allStudents, setAllStudents] = useState<StudentDetails[]>([]); // Store all student details
   const [selectedRequest, setSelectedRequest] =
     useState<BonafideRequest | null>(null);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
@@ -53,6 +54,7 @@ const TutorPendingRequests = () => {
       if (studentsError) {
         showError("Error fetching assigned students: " + studentsError.message);
         setRequests([]);
+        setAllStudents([]);
         setLoading(false);
         return;
       }
@@ -60,6 +62,7 @@ const TutorPendingRequests = () => {
       const tutorStudentsIds = studentsData?.map(s => s.id) || [];
       if (tutorStudentsIds.length === 0) {
         setRequests([]);
+        setAllStudents([]);
         setLoading(false);
         return;
       }
@@ -76,6 +79,11 @@ const TutorPendingRequests = () => {
       } else {
         setRequests(requestsData as BonafideRequest[]);
       }
+
+      // Fetch all student details for the requests
+      const students = await fetchAllStudentsWithDetails(); // This function is now optimized
+      setAllStudents(students.filter(s => tutorStudentsIds.includes(s.id)));
+
       setLoading(false);
     }
   };
@@ -179,7 +187,12 @@ const TutorPendingRequests = () => {
           <DialogHeader>
             <DialogTitle>Review Request</DialogTitle>
           </DialogHeader>
-          {selectedRequest && <RequestDetailsView request={selectedRequest} />}
+          {selectedRequest && (
+            <RequestDetailsView
+              request={selectedRequest}
+              student={allStudents.find(s => s.id === selectedRequest.student_id) || null}
+            />
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsReturnOpen(true)}>
               Return to Student

@@ -25,7 +25,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchRequests, fetchStudentDetails, fetchTemplates, updateRequestStatus } from "@/data/appData";
+import { fetchRequests, fetchAllStudentsWithDetails, fetchTemplates, updateRequestStatus } from "@/data/appData";
 import { BonafideRequest, StudentDetails, CertificateTemplate } from "@/lib/types";
 import { showSuccess, showError } from "@/utils/toast";
 import { generatePdf, getCertificateHtml } from "@/lib/pdf";
@@ -37,9 +37,9 @@ import { supabase } from "@/integrations/supabase/client";
 const PrincipalPendingRequests = () => {
   const { user } = useSession();
   const [requests, setRequests] = useState<BonafideRequest[]>([]);
+  const [allStudents, setAllStudents] = useState<StudentDetails[]>([]); // Store all student details
   const [selectedRequest, setSelectedRequest] =
     useState<BonafideRequest | null>(null);
-  const [previewStudentDetails, setPreviewStudentDetails] = useState<StudentDetails | null>(null); // New state for preview
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isReturnOpen, setIsReturnOpen] = useState(false);
   const [isApproveOpen, setIsApproveOpen] = useState(false);
@@ -64,6 +64,16 @@ const PrincipalPendingRequests = () => {
 
     const fetchedTemplates = await fetchTemplates();
     setTemplates(fetchedTemplates);
+
+    // Fetch all student details for the requests
+    const studentIds = data?.map(req => req.student_id) || [];
+    if (studentIds.length > 0) {
+      const students = await fetchAllStudentsWithDetails(); // This function is now optimized
+      setAllStudents(students.filter(s => studentIds.includes(s.id)));
+    } else {
+      setAllStudents([]);
+    }
+
     setLoading(false);
   };
 
@@ -74,7 +84,7 @@ const PrincipalPendingRequests = () => {
   const handleApproveAndDownload = async () => {
     if (!selectedRequest) return;
 
-    const student: StudentDetails | null = await fetchStudentDetails(selectedRequest.student_id);
+    const student = allStudents.find(s => s.id === selectedRequest.student_id);
     const template: CertificateTemplate | undefined = templates.find(
       (t) => t.id === selectedRequest.template_id
     );
@@ -112,7 +122,6 @@ const PrincipalPendingRequests = () => {
       fetchPrincipalRequests(); // Refresh list
       setIsApproveOpen(false);
       setSelectedRequest(null);
-      setPreviewStudentDetails(null); // Clear preview student details
       setAddSignature(true);
     } else {
       showError("Failed to approve request.");
@@ -128,7 +137,6 @@ const PrincipalPendingRequests = () => {
       setIsReturnOpen(false);
       setReturnReason("");
       setSelectedRequest(null);
-      setPreviewStudentDetails(null); // Clear preview student details
     } else {
       showError("Failed to return request.");
     }
@@ -137,9 +145,6 @@ const PrincipalPendingRequests = () => {
   const openReviewDialog = async (request: BonafideRequest) => {
     setSelectedRequest(request);
     setIsReviewOpen(true);
-    // Fetch student details for the preview
-    const student = await fetchStudentDetails(request.student_id);
-    setPreviewStudentDetails(student);
   };
 
   if (loading) {
@@ -203,14 +208,18 @@ const PrincipalPendingRequests = () => {
         setIsReviewOpen(open);
         if (!open) {
           setSelectedRequest(null);
-          setPreviewStudentDetails(null);
         }
       }}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Review Request</DialogTitle>
           </DialogHeader>
-          {selectedRequest && <RequestDetailsView request={selectedRequest} />}
+          {selectedRequest && (
+            <RequestDetailsView
+              request={selectedRequest}
+              student={allStudents.find(s => s.id === selectedRequest.student_id) || null}
+            />
+          )}
           <DialogFooter>
             <Button
               variant="outline"
@@ -237,7 +246,6 @@ const PrincipalPendingRequests = () => {
         setIsApproveOpen(open);
         if (!open) {
           setSelectedRequest(null);
-          setPreviewStudentDetails(null);
           setAddSignature(true);
         }
       }}>
@@ -255,7 +263,7 @@ const PrincipalPendingRequests = () => {
                     dangerouslySetInnerHTML={{
                       __html: getCertificateHtml(
                         selectedRequest,
-                        previewStudentDetails, // Use the fetched student details
+                        allStudents.find(s => s.id === selectedRequest.student_id) || null, // Pass the fetched student details
                         templates.find(
                           (t) => t.id === selectedRequest.template_id
                         ),
@@ -296,7 +304,6 @@ const PrincipalPendingRequests = () => {
         setIsReturnOpen(open);
         if (!open) {
           setSelectedRequest(null);
-          setPreviewStudentDetails(null);
           setReturnReason("");
         }
       }}>

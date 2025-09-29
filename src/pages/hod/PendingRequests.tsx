@@ -31,8 +31,8 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchTemplates, updateRequestStatus } from "@/data/appData";
-import { BonafideRequest, CertificateTemplate } from "@/lib/types";
+import { fetchTemplates, updateRequestStatus, fetchAllStudentsWithDetails } from "@/data/appData";
+import { BonafideRequest, CertificateTemplate, StudentDetails } from "@/lib/types";
 import { showSuccess, showError } from "@/utils/toast";
 import { formatDateToIndian } from "@/lib/utils";
 import RequestDetailsView from "@/components/shared/RequestDetailsView";
@@ -42,6 +42,7 @@ import { supabase } from "@/integrations/supabase/client";
 const HodPendingRequests = () => {
   const { user, profile, loading: sessionLoading } = useSession();
   const [requests, setRequests] = useState<BonafideRequest[]>([]);
+  const [allStudents, setAllStudents] = useState<StudentDetails[]>([]); // Store all student details
   const [selectedRequest, setSelectedRequest] =
     useState<BonafideRequest | null>(null);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
@@ -59,6 +60,7 @@ const HodPendingRequests = () => {
 
     if (!user?.id || !profile?.department_id) { // If no user/profile after session loads, stop loading
       setRequests([]);
+      setAllStudents([]);
       setComponentLoading(false);
       return;
     }
@@ -80,9 +82,20 @@ const HodPendingRequests = () => {
 
       const fetchedTemplates = await fetchTemplates();
       setTemplates(fetchedTemplates);
+
+      // Fetch all student details for the requests
+      const studentIds = requestsData?.map(req => req.student_id) || [];
+      if (studentIds.length > 0) {
+        const students = await fetchAllStudentsWithDetails(); // This function is now optimized
+        setAllStudents(students.filter(s => studentIds.includes(s.id)));
+      } else {
+        setAllStudents([]);
+      }
+
     } catch (error: any) {
       showError("Failed to fetch HOD pending requests: " + error.message);
       setRequests([]);
+      setAllStudents([]);
       setTemplates([]);
     } finally {
       setComponentLoading(false); // Always stop loading
@@ -188,7 +201,12 @@ const HodPendingRequests = () => {
           <DialogHeader>
             <DialogTitle>Review Request</DialogTitle>
           </DialogHeader>
-          {selectedRequest && <RequestDetailsView request={selectedRequest} />}
+          {selectedRequest && (
+            <RequestDetailsView
+              request={selectedRequest}
+              student={allStudents.find(s => s.id === selectedRequest.student_id) || null}
+            />
+          )}
           <DialogFooter>
             <Button
               variant="outline"
