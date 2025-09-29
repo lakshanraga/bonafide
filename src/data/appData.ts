@@ -396,6 +396,36 @@ interface NewStudentDetailsPayload {
 }
 
 export const createStudent = async (profileData: Omit<Profile, 'id' | 'created_at' | 'updated_at'>, studentData: NewStudentDetailsPayload, password: string): Promise<StudentDetails | null> => {
+  // Check if email or username already exists
+  const { data: existingProfile, error: checkError } = await supabase
+    .from("profiles")
+    .select("email, username")
+    .or(`email.eq.${profileData.email},username.eq.${profileData.username}`)
+    .single();
+
+  if (existingProfile && !checkError) {
+    if (existingProfile.email === profileData.email) {
+      showError("A user with this email already exists.");
+      return null;
+    }
+    if (existingProfile.username === profileData.username) {
+      showError("A user with this username already exists.");
+      return null;
+    }
+  }
+
+  // Check if register number already exists
+  const { data: existingStudent, error: studentCheckError } = await supabase
+    .from("students")
+    .select("register_number")
+    .eq("register_number", studentData.register_number)
+    .single();
+
+  if (existingStudent && !studentCheckError) {
+    showError("A student with this register number already exists.");
+    return null;
+  }
+
   // 1. Create an auth user
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: profileData.email!, // Email is required for signup
@@ -415,7 +445,11 @@ export const createStudent = async (profileData: Omit<Profile, 'id' | 'created_a
 
   if (authError) {
     console.error("Error creating auth user for student:", authError);
-    showError("Failed to create student account: " + authError.message);
+    if (authError.message.includes("already registered")) {
+      showError("This email is already registered. Please use a different email.");
+    } else {
+      showError("Failed to create student account: " + authError.message);
+    }
     return null;
   }
 
@@ -427,11 +461,7 @@ export const createStudent = async (profileData: Omit<Profile, 'id' | 'created_a
 
   const userId = authData.user.id;
 
-  // 2. Insert into profiles table (if not automatically handled by a trigger)
-  // Assuming a trigger exists to create a profile on auth.users insert,
-  // we will only update it if necessary, or rely on the trigger.
-  // For now, we'll explicitly insert to ensure the profile exists with all data.
-  // In a real app, you'd typically have a trigger for this.
+  // 2. Insert into profiles table
   const { data: newProfile, error: profileError } = await supabase
     .from("profiles")
     .insert({
@@ -444,10 +474,7 @@ export const createStudent = async (profileData: Omit<Profile, 'id' | 'created_a
 
   if (profileError || !newProfile) {
     console.error("Error creating student profile:", profileError);
-    // Attempt to delete the auth user if profile creation fails
-    // await supabase.auth.admin.deleteUser(userId); // Requires service role key, which is not available client-side.
-                                                // This is a limitation for client-side admin functions.
-    showError("Failed to create student profile: " + profileError.message);
+    showError("Failed to create student profile: " + (profileError?.message || "Unknown error"));
     return null;
   }
 
@@ -469,9 +496,7 @@ export const createStudent = async (profileData: Omit<Profile, 'id' | 'created_a
     console.error("Error creating student entry:", studentError);
     // Attempt to roll back profile creation if student entry fails
     await supabase.from("profiles").delete().eq("id", userId);
-    // Attempt to delete the auth user (again, client-side limitation)
-    // await supabase.auth.admin.deleteUser(userId);
-    showError("Failed to create student details: " + studentError.message);
+    showError("Failed to create student details: " + (studentError?.message || "Unknown error"));
     return null;
   }
 
@@ -479,7 +504,6 @@ export const createStudent = async (profileData: Omit<Profile, 'id' | 'created_a
 };
 
 export const fetchAllStudentsWithDetails = async (): Promise<StudentDetails[]> => {
-  console.log("Dyad Debug: Starting fetchAllStudentsWithDetails (single query)");
   const { data, error } = await supabase
     .from("students")
     .select(`
