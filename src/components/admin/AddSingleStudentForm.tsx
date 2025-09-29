@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form"; // Corrected import
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Eye, EyeOff } from "lucide-react";
@@ -244,7 +244,14 @@ const AddSingleStudentForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Department</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loading}>
+                <Select
+                  onValueChange={(value) => {
+                    console.log("Dyad Debug: Department Select onValueChange:", value);
+                    field.onChange(value);
+                  }}
+                  value={field.value} // Changed from defaultValue to value
+                  disabled={loading}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a department" />
@@ -268,7 +275,14 @@ const AddSingleStudentForm = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Batch</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={loading || !selectedDepartmentId}>
+                <Select
+                  onValueChange={(value) => {
+                    console.log("Dyad Debug: Batch Select onValueChange:", value);
+                    field.onChange(value);
+                  }}
+                  value={field.value} // Changed from defaultValue to value
+                  disabled={loading || !selectedDepartmentId}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a batch" />
