@@ -68,9 +68,13 @@ const BatchManagement = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
+      console.log("Fetching all data for Batch Management...");
       const fetchedBatches = await fetchBatches();
+      console.log("Fetched Batches:", fetchedBatches);
       const fetchedDepartments = await fetchDepartments();
+      console.log("Fetched Departments:", fetchedDepartments);
       const fetchedTutors = await fetchProfiles('tutor');
+      console.log("Fetched Tutors:", fetchedTutors);
 
       // Process batches to update semester info if needed
       const updatedBatches = fetchedBatches.map((batch) => {
@@ -90,13 +94,16 @@ const BatchManagement = () => {
       setBatches(updatedBatches);
       setDepartments(fetchedDepartments);
       setTutors(fetchedTutors);
+      console.log("Batch Management data fetched successfully.");
     } catch (error: any) {
+      console.error("Error in fetchAllData for Batch Management:", error);
       showError(error.message);
       setBatches([]); // Clear data on error
       setDepartments([]);
       setTutors([]);
     } finally {
       setLoading(false);
+      console.log("Batch Management loading set to false.");
     }
   };
 
