@@ -138,61 +138,53 @@ const BatchManagement = () => {
 
     const oldTotalSections = originalBatch.total_sections || 1;
     const newTotalSections = editingBatch.total_sections || 1;
+    const batchName = editingBatch.name;
+    const departmentId = editingBatch.department_id;
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    // Update the main batch entry (this specific section's total_sections)
-    const updatedMainBatch = await updateBatch(editingBatch.id, {
-      total_sections: newTotalSections,
-    });
+    // Update total_sections for ALL sections of this batch name and department
+    const { error: updateAllError } = await supabase
+      .from('batches')
+      .update({ total_sections: newTotalSections })
+      .eq('name', batchName)
+      .eq('department_id', departmentId);
 
-    if (!updatedMainBatch) {
-      showError("Failed to update batch details.");
+    if (updateAllError) {
+      showError("Failed to update total sections for all batch sections: " + updateAllError.message);
       return;
     }
 
     // Logic to add/remove sections based on total_sections change
-    if (oldTotalSections !== newTotalSections) {
-      const batchName = editingBatch.name;
-      const departmentId = editingBatch.department_id;
-      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-      if (newTotalSections > oldTotalSections) {
-        for (let i = oldTotalSections; i < newTotalSections; i++) {
-          const sectionName = alphabet[i];
-          const fullBatchName = `${batchName} ${sectionName}`;
-          const currentSemester = calculateCurrentSemesterForBatch(fullBatchName);
-          const { from, to } = getSemesterDateRange(fullBatchName, currentSemester);
-          const newSection: Omit<Batch, 'id' | 'created_at'> = {
-            name: batchName,
-            section: sectionName,
-            tutor_id: null, // Unassigned by default
-            total_sections: newTotalSections, // All sections of this batch name should reflect the new total
-            student_count: 0,
-            status: "Active",
-            current_semester: currentSemester,
-            semester_from_date: from,
-            semester_to_date: to,
-            department_id: departmentId,
-          };
-          await createBatch(newSection);
-        }
-      } else if (newTotalSections < oldTotalSections) {
-        // Remove excess sections
-        const sectionsToRemove = batches.filter(b =>
-          b.name === batchName &&
-          b.department_id === departmentId &&
-          b.section &&
-          alphabet.indexOf(b.section) >= newTotalSections
-        );
-        for (const section of sectionsToRemove) {
-          await supabase.from('batches').delete().eq('id', section.id);
-        }
+    if (newTotalSections > oldTotalSections) {
+      for (let i = oldTotalSections; i < newTotalSections; i++) {
+        const sectionName = alphabet[i];
+        const fullBatchName = `${batchName} ${sectionName}`;
+        const currentSemester = calculateCurrentSemesterForBatch(fullBatchName);
+        const { from, to } = getSemesterDateRange(fullBatchName, currentSemester);
+        const newSection: Omit<Batch, 'id' | 'created_at'> = {
+          name: batchName,
+          section: sectionName,
+          tutor_id: null, // Unassigned by default
+          total_sections: newTotalSections,
+          student_count: 0,
+          status: "Active",
+          current_semester: currentSemester,
+          semester_from_date: from,
+          semester_to_date: to,
+          department_id: departmentId,
+        };
+        await createBatch(newSection);
       }
-      // Also update existing sections with the new total_sections value
-      const existingSectionsToUpdate = batches.filter(b =>
-        b.name === batchName && b.department_id === departmentId && b.total_sections !== newTotalSections
+    } else if (newTotalSections < oldTotalSections) {
+      // Remove excess sections
+      const sectionsToRemove = batches.filter(b =>
+        b.name === batchName &&
+        b.department_id === departmentId &&
+        b.section &&
+        alphabet.indexOf(b.section) >= newTotalSections
       );
-      for (const section of existingSectionsToUpdate) {
-        await updateBatch(section.id, { total_sections: newTotalSections });
+      for (const section of sectionsToRemove) {
+        await supabase.from('batches').delete().eq('id', section.id);
       }
     }
 
@@ -231,6 +223,23 @@ const BatchManagement = () => {
 
     if (!batchName || !department_id) {
       showError("Batch name and Department are required.");
+      return;
+    }
+
+    // Check if a batch with this name and department already exists
+    const { data: existingBatches, error: fetchError } = await supabase
+      .from('batches')
+      .select('id')
+      .eq('name', batchName)
+      .eq('department_id', department_id);
+
+    if (fetchError) {
+      showError("Error checking for existing batches: " + fetchError.message);
+      return;
+    }
+
+    if (existingBatches && existingBatches.length > 0) {
+      showError(`A batch named "${batchName}" already exists in this department. Please use the 'Edit Batch Details' option for an existing section to modify its total sections.`);
       return;
     }
 
@@ -298,7 +307,7 @@ const BatchManagement = () => {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Add New Batch</DialogTitle>
-                <DialogDescription>Enter the details for the new batch.</DialogDescription>
+                <DialogDescription>Enter the details for the new batch. This will create a new academic year entry and its initial sections.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
