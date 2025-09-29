@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useForm } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form"; // Corrected import
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Eye, EyeOff } from "lucide-react"; // Import Eye icons
+import { Eye, EyeOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +38,7 @@ const formSchema = z.object({
   parent_name: z.string().optional(),
   department_id: z.string().min(1, { message: "Department is required." }),
   batch_id: z.string().min(1, { message: "Batch is required." }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters." }), // New password field
+  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 
 interface AddSingleStudentFormProps {
@@ -59,7 +59,7 @@ const AddSingleStudentForm = ({
   onCancel,
 }: AddSingleStudentFormProps) => {
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -73,7 +73,7 @@ const AddSingleStudentForm = ({
       parent_name: "",
       department_id: "",
       batch_id: "",
-      password: "", // Default for new password field
+      password: "",
     },
   });
 
@@ -102,7 +102,6 @@ const AddSingleStudentForm = ({
     const selectedBatch = batches.find(b => b.id === values.batch_id);
     const departmentHod = hods.find(h => h.department_id === values.department_id);
 
-    // Dyad Debug: Log values before creating student
     console.log("Dyad Debug: Form values:", values);
     console.log("Dyad Debug: Selected Department ID:", values.department_id);
     console.log("Dyad Debug: Selected Batch ID:", values.batch_id);
@@ -119,18 +118,18 @@ const AddSingleStudentForm = ({
         username: values.username,
         email: values.email,
         phone_number: values.phone_number,
-        department_id: values.department_id, // This is passed to profileData
-        batch_id: values.batch_id,           // This is passed to profileData
+        department_id: values.department_id,
+        batch_id: values.batch_id,
         role: 'student',
       },
       {
         register_number: values.register_number,
         parent_name: values.parent_name,
-        batch_id: values.batch_id,           // This is passed to studentData
-        tutor_id: selectedBatch?.tutor_id, // This is passed to studentData
-        hod_id: departmentHod?.id,         // This is passed to studentData
+        batch_id: values.batch_id,
+        tutor_id: selectedBatch?.tutor_id,
+        hod_id: departmentHod?.id,
       },
-      values.password // Pass the new password
+      values.password
     );
 
     if (newStudent) {
@@ -276,7 +275,6 @@ const AddSingleStudentForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {console.log("Dyad Debug: Rendering SelectContent. filteredBatches:", filteredBatches)}
                     {filteredBatches.map((batch) => (
                       <SelectItem key={batch.id} value={batch.id}>
                         {`${batch.name} ${batch.section || ''}`.trim()}
@@ -288,7 +286,6 @@ const AddSingleStudentForm = ({
               </FormItem>
             )}
           />
-          {/* New Password Field */}
           <FormField
             control={form.control}
             name="password"
