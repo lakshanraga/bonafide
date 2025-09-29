@@ -73,8 +73,19 @@ const BatchManagement = () => {
       const fetchedDepartments = await fetchDepartments();
       const fetchedTutors = await fetchProfiles('tutor');
 
-      // Process batches to update semester info if needed
-      const updatedBatches = fetchedBatches.map((batch) => {
+      // Deduplicate fetched batches based on department_id, name, and section
+      const seen = new Set<string>();
+      const uniqueFetchedBatches: Batch[] = [];
+      for (const batch of fetchedBatches) {
+        const key = `${batch.department_id}-${batch.name}-${batch.section || ''}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueFetchedBatches.push(batch);
+        }
+      }
+      
+      // Process unique batches to update semester info if needed
+      const updatedBatches = uniqueFetchedBatches.map((batch) => {
         const fullBatchName = batch.section
           ? `${batch.name} ${batch.section}`
           : batch.name;
@@ -165,7 +176,7 @@ const BatchManagement = () => {
           name: batchName,
           section: sectionName,
           tutor_id: null, // Unassigned by default
-          total_sections: newTotalSections,
+          total_sections: newTotalSections, // All sections of this batch name should reflect the new total
           student_count: 0,
           status: "Active",
           current_semester: currentSemester,
