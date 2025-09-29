@@ -55,13 +55,19 @@ export const fetchStudentDetails = async (studentId: string): Promise<StudentDet
     console.error("Dyad Debug: Error fetching student details:", studentError);
     return null;
   }
-  console.log("Dyad Debug: Fetched studentData:", studentData);
+  // console.log("Dyad Debug: Fetched studentData:", studentData); // This logs the raw data, which is not what we want to debug for joins
 
   const profile = studentData.main_profile;
   const batch = studentData.batches;
   const department = batch?.departments;
   const tutor = studentData.tutor_profile;
   const hod = studentData.hod_profile;
+
+  if (!batch) console.warn(`Dyad Debug: Batch data is null for student ${studentId}. Check RLS or data integrity.`);
+  if (!department) console.warn(`Dyad Debug: Department data is null for student ${studentId}. Check RLS or data integrity.`);
+  if (!tutor) console.warn(`Dyad Debug: Tutor profile is null for student ${studentId}. Check RLS or data integrity.`);
+  if (!hod) console.warn(`Dyad Debug: HOD profile is null for student ${studentId}. Check RLS or data integrity.`);
+
 
   return {
     id: studentData.id,
