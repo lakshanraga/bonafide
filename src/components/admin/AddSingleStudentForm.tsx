@@ -99,6 +99,16 @@ const AddSingleStudentForm = ({
     const selectedBatch = batches.find(b => b.id === values.batch_id);
     const departmentHod = hods.find(h => h.department_id === values.department_id);
 
+    // Dyad Debug: Log values before creating student
+    console.log("Dyad Debug: Form values:", values);
+    console.log("Dyad Debug: Selected Department ID:", values.department_id);
+    console.log("Dyad Debug: Selected Batch ID:", values.batch_id);
+    console.log("Dyad Debug: Resolved Batch (from batches array):", selectedBatch);
+    console.log("Dyad Debug: Resolved HOD (from hods array):", departmentHod);
+    console.log("Dyad Debug: Tutor ID from selected batch:", selectedBatch?.tutor_id);
+    console.log("Dyad Debug: HOD ID from department HOD:", departmentHod?.id);
+
+
     const newStudent = await createStudent(
       {
         first_name: values.first_name,
@@ -106,16 +116,16 @@ const AddSingleStudentForm = ({
         username: values.username,
         email: values.email,
         phone_number: values.phone_number,
-        department_id: values.department_id,
-        batch_id: values.batch_id,
+        department_id: values.department_id, // This is passed to profileData
+        batch_id: values.batch_id,           // This is passed to profileData
         role: 'student',
       },
       {
         register_number: values.register_number,
         parent_name: values.parent_name,
-        batch_id: values.batch_id,
-        tutor_id: selectedBatch?.tutor_id, // Assign batch's tutor
-        hod_id: departmentHod?.id, // Assign department's HOD
+        batch_id: values.batch_id,           // This is passed to studentData
+        tutor_id: selectedBatch?.tutor_id, // This is passed to studentData
+        hod_id: departmentHod?.id,         // This is passed to studentData
       },
       values.password // Pass the new password
     );
@@ -166,161 +176,161 @@ const AddSingleStudentForm = ({
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="john.doe" {...field} disabled={loading} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="john.doe@example.com" {...field} disabled={loading} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="phone_number"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone Number</FormLabel>
-              <FormControl>
-                <Input type="tel" placeholder="9876543210" {...field} disabled={loading} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="register_number"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Register Number</FormLabel>
-              <FormControl>
-                <Input placeholder="123456789" {...field} disabled={loading} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="parent_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Parent's Name (Optional)</FormLabel>
-              <FormControl>
-                <Input placeholder="Jane Doe" {...field} disabled={loading} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="department_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Department</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loading}>
+                <FormLabel>Username</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a department" />
-                  </SelectTrigger>
+                  <Input placeholder="john.doe" {...field} disabled={loading} />
                 </FormControl>
-                <SelectContent>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="batch_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Batch</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={loading || !selectedDepartmentId}>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a batch" />
-                  </SelectTrigger>
+                  <Input type="email" placeholder="john.doe@example.com" {...field} disabled={loading} />
                 </FormControl>
-                <SelectContent>
-                  {filteredBatches.map((batch) => (
-                    <SelectItem key={batch.id} value={batch.id}>
-                      {`${batch.name} ${batch.section || ''}`.trim()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {/* New Password Field */}
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Set initial password"
-                    {...field}
-                    disabled={loading}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-primary/10"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    disabled={loading}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    <span className="sr-only">Toggle password visibility</span>
-                  </Button>
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? "Adding Student..." : "Add Student"}
-          </Button>
-        </div>
-      </form>
-    </Form>
-  );
-};
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="phone_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone Number</FormLabel>
+                <FormControl>
+                  <Input type="tel" placeholder="9876543210" {...field} disabled={loading} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="register_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Register Number</FormLabel>
+                <FormControl>
+                  <Input placeholder="123456789" {...field} disabled={loading} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="parent_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Parent's Name (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="Jane Doe" {...field} disabled={loading} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="department_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Department</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loading}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a department" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="batch_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Batch</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value} disabled={loading || !selectedDepartmentId}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a batch" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {filteredBatches.map((batch) => (
+                      <SelectItem key={batch.id} value={batch.id}>
+                        {`${batch.name} ${batch.section || ''}`.trim()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* New Password Field */}
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Set initial password"
+                      {...field}
+                      disabled={loading}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-primary/10"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      disabled={loading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className="sr-only">Toggle password visibility</span>
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Adding Student..." : "Add Student"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    );
+  };
 
 export default AddSingleStudentForm;
