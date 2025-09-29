@@ -52,7 +52,7 @@ import { createBatch, fetchBatches, fetchDepartments, fetchProfiles, updateBatch
 import { supabase } from "@/integrations/supabase/client";
 
 const BatchManagement = () => {
-  const [batches, setBatches] = useState<Batch[]>([]);
+  const [allBatches, setAllBatches] = useState<Batch[]>([]); // Renamed to allBatches
   const [departments, setDepartments] = useState<Department[]>([]);
   const [tutors, setTutors] = useState<Profile[]>([]);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -65,6 +65,10 @@ const BatchManagement = () => {
     department_id: "",
   });
   const [loading, setLoading] = useState(true);
+
+  // Filter states
+  const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState("all");
+  const [selectedBatchNameFilter, setSelectedBatchNameFilter] = useState("all");
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -99,12 +103,12 @@ const BatchManagement = () => {
         };
       });
 
-      setBatches(updatedBatches);
+      setAllBatches(updatedBatches); // Set to allBatches
       setDepartments(fetchedDepartments);
       setTutors(fetchedTutors);
     } catch (error: any) {
       showError(error.message);
-      setBatches([]); // Clear data on error
+      setAllBatches([]); // Clear data on error
       setDepartments([]);
       setTutors([]);
     } finally {
@@ -116,8 +120,25 @@ const BatchManagement = () => {
     fetchAllData();
   }, []);
 
+  // Memoized filtered batches
+  const filteredBatches = useMemo(() => {
+    return allBatches.filter((batch) => {
+      const departmentMatch =
+        selectedDepartmentFilter === "all" || batch.departments?.name === selectedDepartmentFilter;
+      const batchNameMatch =
+        selectedBatchNameFilter === "all" || batch.name === selectedBatchNameFilter;
+      return departmentMatch && batchNameMatch;
+    });
+  }, [allBatches, selectedDepartmentFilter, selectedBatchNameFilter]);
+
+  // Unique batch names for the filter dropdown
+  const uniqueBatchNames = useMemo(() => {
+    const names = allBatches.map(batch => batch.name);
+    return [...new Set(names)];
+  }, [allBatches]);
+
   const handleToggleStatus = async (batchId: string) => {
-    const batchToUpdate = batches.find((b) => b.id === batchId);
+    const batchToUpdate = allBatches.find((b) => b.id === batchId);
     if (!batchToUpdate) return;
 
     const newStatus = batchToUpdate.status === "Active" ? "Inactive" : "Active";
@@ -144,7 +165,7 @@ const BatchManagement = () => {
   const handleSaveChanges = async () => {
     if (!editingBatch) return;
 
-    const originalBatch = batches.find((b) => b.id === editingBatch.id);
+    const originalBatch = allBatches.find((b) => b.id === editingBatch.id);
     if (!originalBatch) return;
 
     const oldTotalSections = originalBatch.total_sections || 1;
@@ -176,7 +197,7 @@ const BatchManagement = () => {
           name: batchName,
           section: sectionName,
           tutor_id: null, // Unassigned by default
-          total_sections: newTotalSections, // All sections of this batch name should reflect the new total
+          total_sections: newTotalSections,
           student_count: 0,
           status: "Active",
           current_semester: currentSemester,
@@ -188,7 +209,7 @@ const BatchManagement = () => {
       }
     } else if (newTotalSections < oldTotalSections) {
       // Remove excess sections
-      const sectionsToRemove = batches.filter(b =>
+      const sectionsToRemove = allBatches.filter(b =>
         b.name === batchName &&
         b.department_id === departmentId &&
         b.section &&
@@ -309,76 +330,104 @@ const BatchManagement = () => {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
           <CardTitle>Batch Management</CardTitle>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>Add New Batch</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Batch</DialogTitle>
-                <DialogDescription>Enter the details for the new batch. This will create a new academic year entry and its initial sections.</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="new-batch-department">Department</Label>
-                  <Select
-                    value={newBatch.department_id}
-                    onValueChange={(value) =>
-                      setNewBatch({ ...newBatch, department_id: value })
-                    }
-                    required
-                  >
-                    <SelectTrigger id="new-batch-department">
-                      <SelectValue placeholder="Select Department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {departments.map((dept) => (
-                        <SelectItem key={dept.id} value={dept.id}>
-                          {dept.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select onValueChange={setSelectedDepartmentFilter} defaultValue="all">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by Department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                {departments.map((dept) => (
+                  <SelectItem key={dept.id} value={dept.name}>
+                    {dept.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select onValueChange={setSelectedBatchNameFilter} defaultValue="all">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by Batch Name" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Batch Names</SelectItem>
+                {uniqueBatchNames.map((name) => (
+                  <SelectItem key={name} value={name}>
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>Add New Batch</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Batch</DialogTitle>
+                  <DialogDescription>Enter the details for the new batch. This will create a new academic year entry and its initial sections.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="new-batch-department">Department</Label>
+                    <Select
+                      value={newBatch.department_id}
+                      onValueChange={(value) =>
+                        setNewBatch({ ...newBatch, department_id: value })
+                      }
+                      required
+                    >
+                      <SelectTrigger id="new-batch-department">
+                        <SelectValue placeholder="Select Department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map((dept) => (
+                          <SelectItem key={dept.id} value={dept.id}>
+                            {dept.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="new-batch-name">
+                      Batch (e.g., 2024-2028)
+                    </Label>
+                    <Input
+                      id="new-batch-name"
+                      value={newBatch.name}
+                      onChange={(e) =>
+                        setNewBatch({ ...newBatch, name: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="new-total-sections">Total Sections</Label>
+                    <Input
+                      id="new-total-sections"
+                      type="number"
+                      min="1"
+                      value={newBatch.total_sections}
+                      onChange={(e) =>
+                        setNewBatch({
+                          ...newBatch,
+                          total_sections: Number(e.target.value),
+                        })
+                      }
+                    />
+                  </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="new-batch-name">
-                    Batch (e.g., 2024-2028)
-                  </Label>
-                  <Input
-                    id="new-batch-name"
-                    value={newBatch.name}
-                    onChange={(e) =>
-                      setNewBatch({ ...newBatch, name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="new-total-sections">Total Sections</Label>
-                  <Input
-                    id="new-total-sections"
-                    type="number"
-                    min="1"
-                    value={newBatch.total_sections}
-                    onChange={(e) =>
-                      setNewBatch({
-                        ...newBatch,
-                        total_sections: Number(e.target.value),
-                      })
-                    }
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Cancel</Button>
-                </DialogClose>
-                <Button onClick={handleAddNewBatch}>Create Batch</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Cancel</Button>
+                  </DialogClose>
+                  <Button onClick={handleAddNewBatch}>Create Batch</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -396,7 +445,7 @@ const BatchManagement = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {batches.map((batch) => { // Iterate directly over batches
+              {filteredBatches.map((batch) => { // Iterate over filteredBatches
                 const department = departments.find(
                   (d) => d.id === batch.department_id
                 );
