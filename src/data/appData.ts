@@ -397,7 +397,7 @@ export const createStudent = async (profileData: Omit<Profile, 'id' | 'created_a
     options: {
       data: {
         first_name: profileData.first_name,
-        last_name: profile.last_name,
+        last_name: profileData.last_name,
         username: profileData.username,
         role: 'student',
         department_id: profileData.department_id,
@@ -439,7 +439,7 @@ export const createStudent = async (profileData: Omit<Profile, 'id' | 'created_a
   if (profileError || !newProfile) {
     console.error("Error creating student profile:", profileError);
     // Attempt to delete the auth user if profile creation fails
-    await supabase.auth.admin.deleteUser(userId); // Requires service role key, which is not available client-side.
+    // await supabase.auth.admin.deleteUser(userId); // Requires service role key, which is not available client-side.
                                                 // This is a limitation for client-side admin functions.
     showError("Failed to create student profile: " + profileError.message);
     return null;
@@ -464,7 +464,7 @@ export const createStudent = async (profileData: Omit<Profile, 'id' | 'created_a
     // Attempt to roll back profile creation if student entry fails
     await supabase.from("profiles").delete().eq("id", userId);
     // Attempt to delete the auth user (again, client-side limitation)
-    await supabase.auth.admin.deleteUser(userId);
+    // await supabase.auth.admin.deleteUser(userId);
     showError("Failed to create student details: " + studentError.message);
     return null;
   }
@@ -473,12 +473,15 @@ export const createStudent = async (profileData: Omit<Profile, 'id' | 'created_a
 };
 
 export const fetchAllStudentsWithDetails = async (): Promise<StudentDetails[]> => {
+  console.log("Dyad Debug: Starting fetchAllStudentsWithDetails (single query)");
   const { data, error } = await supabase
-    .from("students") // Start from the students table
+    .from("students")
     .select(`
-      *,
+      id,
+      register_number,
+      parent_name,
       main_profile:profiles!students_id_fkey(id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at),
-      batches(name, section, current_semester, departments(name)),
+      batches(id, name, section, current_semester, departments(id, name)),
       tutor_profile:profiles!students_tutor_id_fkey(id, first_name, last_name),
       hod_profile:profiles!students_hod_id_fkey(id, first_name, last_name)
     `);
@@ -496,7 +499,7 @@ export const fetchAllStudentsWithDetails = async (): Promise<StudentDetails[]> =
     const hod = studentRow.hod_profile;
 
     return {
-      id: studentRow.id, // Student's UUID from the 'students' table (which is also their profile ID)
+      id: studentRow.id,
       first_name: profile?.first_name,
       last_name: profile?.last_name,
       username: profile?.username,
@@ -510,11 +513,11 @@ export const fetchAllStudentsWithDetails = async (): Promise<StudentDetails[]> =
       register_number: studentRow.register_number,
       parent_name: studentRow.parent_name,
       
-      batch_id: batch?.id, // Use batch.id from the joined batch
+      batch_id: batch?.id,
       batch_name: batch ? `${batch.name} ${batch.section || ''}`.trim() : undefined,
       current_semester: batch?.current_semester,
       
-      department_id: department?.id, // Use department.id from the joined department
+      department_id: department?.id,
       department_name: department?.name,
       
       tutor_id: tutor?.id,

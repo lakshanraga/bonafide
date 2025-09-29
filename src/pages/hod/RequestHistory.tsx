@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { fetchBatches, fetchStudentDetails } from "@/data/appData";
+import { fetchBatches } from "@/data/appData"; // Keep fetchBatches
 import { getStatusVariant, formatDateToIndian } from "@/lib/utils";
 import { BonafideRequest, Batch, StudentDetails } from "@/lib/types";
 import { useSession } from "@/components/auth/SessionContextProvider";
@@ -32,26 +32,22 @@ const HodRequestHistory = () => {
   const { user, profile, loading: sessionLoading } = useSession();
   const [allRequests, setAllRequests] = useState<BonafideRequest[]>([]);
   const [allBatches, setAllBatches] = useState<Batch[]>([]);
-  const [allStudents, setAllStudents] = useState<StudentDetails[]>([]);
+  const [allStudentsWithDetails, setAllStudentsWithDetails] = useState<StudentDetails[]>([]); // Store all student details
   const [selectedBatch, setSelectedBatch] = useState("all");
   const [selectedSemester, setSelectedSemester] = useState("all");
-  const [componentLoading, setComponentLoading] = useState(true); // Renamed to avoid conflict
+  const [componentLoading, setComponentLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (sessionLoading) { // Wait for session to load
-        return;
-      }
-
-      if (!user?.id || !profile?.department_id) { // If no user/profile after session loads, stop loading
+      if (sessionLoading || !user?.id || !profile?.department_id) {
         setAllBatches([]);
-        setAllStudents([]);
+        setAllStudentsWithDetails([]);
         setAllRequests([]);
         setComponentLoading(false);
         return;
       }
 
-      setComponentLoading(true); // Start loading for this component's data
+      setComponentLoading(true);
       try {
         // Fetch batches for HOD's department (RLS will filter)
         const { data: batchesData, error: batchesError } = await supabase
@@ -61,43 +57,82 @@ const HodRequestHistory = () => {
         if (batchesError) {
           showError("Error fetching batches for department: " + batchesError.message);
           setAllBatches([]);
-          setAllStudents([]);
+          setAllStudentsWithDetails([]);
           setAllRequests([]);
           return;
         }
         setAllBatches(batchesData as Batch[]);
 
-        // Fetch student IDs in HOD's department (RLS will filter)
-        const { data: studentIdsData, error: studentIdsError } = await supabase
+        // Fetch all students with details in HOD's department (RLS will filter)
+        const { data: studentsData, error: studentsError } = await supabase
           .from('students')
-          .select('id');
+          .select(`
+            *,
+            main_profile:profiles!students_id_fkey(id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at),
+            batches(name, section, current_semester, departments(name)),
+            tutor_profile:profiles!students_tutor_id_fkey(id, first_name, last_name),
+            hod_profile:profiles!students_hod_id_fkey(id, first_name, last_name)
+          `);
 
-        if (studentIdsError) {
-          showError("Error fetching student IDs for department: " + studentIdsError.message);
-          setAllStudents([]);
+        if (studentsError) {
+          showError("Error fetching student data for department history: " + studentsError.message);
+          setAllStudentsWithDetails([]);
           setAllRequests([]);
           return;
         }
 
-        const studentIds = studentIdsData?.map(s => s.id) || [];
-        if (studentIds.length === 0) {
-          setAllStudents([]);
+        const detailedStudents = studentsData.map((studentRow: any) => {
+          const profile = studentRow.main_profile;
+          const batch = studentRow.batches;
+          const department = batch?.departments;
+          const tutor = studentRow.tutor_profile;
+          const hod = studentRow.hod_profile;
+
+          return {
+            id: studentRow.id,
+            first_name: profile?.first_name,
+            last_name: profile?.last_name,
+            username: profile?.username,
+            email: profile?.email,
+            phone_number: profile?.phone_number,
+            avatar_url: profile?.avatar_url,
+            role: profile?.role,
+            created_at: profile?.created_at,
+            updated_at: profile?.updated_at,
+
+            register_number: studentRow.register_number,
+            parent_name: studentRow.parent_name,
+            
+            batch_id: batch?.id,
+            batch_name: batch ? `${batch.name} ${batch.section || ''}`.trim() : undefined,
+            current_semester: batch?.current_semester,
+            
+            department_id: department?.id,
+            department_name: department?.name,
+            
+            tutor_id: tutor?.id,
+            tutor_name: tutor ? `${tutor.first_name} ${tutor.last_name || ''}`.trim() : undefined,
+            
+            hod_id: hod?.id,
+            hod_name: hod ? `${hod.first_name} ${hod.last_name || ''}`.trim() : undefined,
+          } as StudentDetails;
+        });
+        setAllStudentsWithDetails(detailedStudents);
+
+        const departmentStudentIds = detailedStudents.map(s => s.id);
+        if (departmentStudentIds.length === 0) {
           setAllRequests([]);
+          setComponentLoading(false);
           return;
         }
-
-        // Fetch full student details for each student in the department
-        const detailedStudentsPromises = studentIds.map(id => fetchStudentDetails(id));
-        const detailedStudents = await Promise.all(detailedStudentsPromises);
-        setAllStudents(detailedStudents.filter(s => s !== null) as StudentDetails[]);
 
         // Fetch requests for these students, excluding pending tutor approval (RLS will filter)
         const { data: requestsData, error: requestsError } = await supabase
           .from('requests')
           .select('*')
-          .in('student_id', studentIds) // Filter requests by students in HOD's department
+          .in('student_id', departmentStudentIds)
           .neq('status', 'Pending HOD Approval')
-          .neq('status', 'Pending Tutor Approval'); // HOD doesn't see tutor pending either
+          .neq('status', 'Pending Tutor Approval');
 
         if (requestsError) {
           showError("Error fetching request history: " + requestsError.message);
@@ -108,14 +143,14 @@ const HodRequestHistory = () => {
       } catch (error: any) {
         showError("Failed to fetch HOD request history: " + error.message);
         setAllBatches([]);
-        setAllStudents([]);
+        setAllStudentsWithDetails([]);
         setAllRequests([]);
       } finally {
-        setComponentLoading(false); // Always stop loading
+        setComponentLoading(false);
       }
     };
     fetchData();
-  }, [user, profile?.department_id, sessionLoading]); // Depend on user, profile, and sessionLoading
+  }, [user, profile?.department_id, sessionLoading]);
 
   const uniqueBatches = useMemo(() => {
     const batchNames = allBatches.map((b) =>
@@ -125,7 +160,7 @@ const HodRequestHistory = () => {
   }, [allBatches]);
 
   const filteredHistory = allRequests.filter((request) => {
-    const student = allStudents.find(
+    const student = allStudentsWithDetails.find(
       (s) => s.id === request.student_id
     );
     if (!student) return false;
@@ -139,7 +174,7 @@ const HodRequestHistory = () => {
     return batchMatch && semesterMatch;
   });
 
-  if (componentLoading || sessionLoading) { // Show loading if session is loading or component data is loading
+  if (componentLoading || sessionLoading) {
     return (
       <Card>
         <CardHeader>
@@ -200,7 +235,7 @@ const HodRequestHistory = () => {
           <TableBody>
             {filteredHistory.length > 0 ? (
               filteredHistory.map((request) => {
-                const student = allStudents.find(
+                const student = allStudentsWithDetails.find(
                   (s) => s.id === request.student_id
                 );
                 return (

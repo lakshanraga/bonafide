@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { fetchRequests, fetchStudentDetails } from "@/data/appData";
+import { fetchRequests } from "@/data/appData"; // Keep fetchRequests for all requests
 import { getStatusVariant, formatDateToIndian } from "@/lib/utils";
 import { BonafideRequest, StudentDetails } from "@/lib/types";
 import { useSession } from "@/components/auth/SessionContextProvider";
@@ -31,54 +31,90 @@ import { showError } from "@/utils/toast";
 const TutorRequestHistory = () => {
   const { user, loading: sessionLoading } = useSession();
   const [allRequests, setAllRequests] = useState<BonafideRequest[]>([]);
-  const [studentsInCharge, setStudentsInCharge] = useState<StudentDetails[]>([]);
+  const [allStudentsWithDetails, setAllStudentsWithDetails] = useState<StudentDetails[]>([]); // Store all student details
   const [selectedSemester, setSelectedSemester] = useState("all");
-  const [componentLoading, setComponentLoading] = useState(true); // Renamed to avoid conflict
+  const [componentLoading, setComponentLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (sessionLoading) { // Wait for session to load
-        return;
-      }
-
-      if (!user?.id) { // If no user after session loads, stop loading
+      if (sessionLoading || !user?.id) {
         setAllRequests([]);
-        setStudentsInCharge([]);
+        setAllStudentsWithDetails([]);
         setComponentLoading(false);
         return;
       }
 
-      setComponentLoading(true); // Start loading for this component's data
+      setComponentLoading(true);
       try {
-        // Fetch students assigned to this tutor
+        // Fetch all students with details assigned to this tutor in a single query
         const { data: studentsData, error: studentsError } = await supabase
           .from('students')
-          .select(`id, register_number`) // Only fetch ID and register_number initially
+          .select(`
+            *,
+            main_profile:profiles!students_id_fkey(id, first_name, last_name, username, email, phone_number, avatar_url, role, department_id, batch_id, created_at, updated_at),
+            batches(name, section, current_semester, departments(name)),
+            tutor_profile:profiles!students_tutor_id_fkey(id, first_name, last_name),
+            hod_profile:profiles!students_hod_id_fkey(id, first_name, last_name)
+          `)
           .eq('tutor_id', user.id);
 
         if (studentsError) {
-          showError("Error fetching assigned students: " + studentsError.message);
-          setStudentsInCharge([]);
-          return;
-        }
-
-        const studentIds = studentsData?.map(s => s.id) || [];
-        if (studentIds.length === 0) {
+          showError("Error fetching assigned students for history: " + studentsError.message);
+          setAllStudentsWithDetails([]);
           setAllRequests([]);
-          setStudentsInCharge([]);
           return;
         }
 
-        // Fetch full student details for each assigned student
-        const detailedStudentsPromises = studentIds.map(id => fetchStudentDetails(id));
-        const detailedStudents = await Promise.all(detailedStudentsPromises);
-        setStudentsInCharge(detailedStudents.filter(s => s !== null) as StudentDetails[]);
+        const detailedStudents = studentsData.map((studentRow: any) => {
+          const profile = studentRow.main_profile;
+          const batch = studentRow.batches;
+          const department = batch?.departments;
+          const tutor = studentRow.tutor_profile;
+          const hod = studentRow.hod_profile;
+
+          return {
+            id: studentRow.id,
+            first_name: profile?.first_name,
+            last_name: profile?.last_name,
+            username: profile?.username,
+            email: profile?.email,
+            phone_number: profile?.phone_number,
+            avatar_url: profile?.avatar_url,
+            role: profile?.role,
+            created_at: profile?.created_at,
+            updated_at: profile?.updated_at,
+
+            register_number: studentRow.register_number,
+            parent_name: studentRow.parent_name,
+            
+            batch_id: batch?.id,
+            batch_name: batch ? `${batch.name} ${batch.section || ''}`.trim() : undefined,
+            current_semester: batch?.current_semester,
+            
+            department_id: department?.id,
+            department_name: department?.name,
+            
+            tutor_id: tutor?.id,
+            tutor_name: tutor ? `${tutor.first_name} ${tutor.last_name || ''}`.trim() : undefined,
+            
+            hod_id: hod?.id,
+            hod_name: hod ? `${hod.first_name} ${hod.last_name || ''}`.trim() : undefined,
+          } as StudentDetails;
+        });
+        setAllStudentsWithDetails(detailedStudents);
+
+        const tutorStudentIds = detailedStudents.map(s => s.id);
+        if (tutorStudentIds.length === 0) {
+          setAllRequests([]);
+          setComponentLoading(false);
+          return;
+        }
 
         // Fetch requests for these students, excluding pending tutor approval
         const { data: requestsData, error: requestsError } = await supabase
           .from('requests')
           .select('*')
-          .in('student_id', studentIds)
+          .in('student_id', tutorStudentIds)
           .neq('status', 'Pending Tutor Approval');
 
         if (requestsError) {
@@ -90,23 +126,23 @@ const TutorRequestHistory = () => {
       } catch (error: any) {
         showError("Failed to fetch request history: " + error.message);
         setAllRequests([]);
-        setStudentsInCharge([]);
+        setAllStudentsWithDetails([]);
       } finally {
-        setComponentLoading(false); // Always stop loading
+        setComponentLoading(false);
       }
     };
     fetchData();
-  }, [user, sessionLoading]); // Depend on user and sessionLoading
+  }, [user, sessionLoading]);
 
   const filteredHistory = allRequests.filter((request) => {
     if (selectedSemester === "all") return true;
-    const student = studentsInCharge.find(
+    const student = allStudentsWithDetails.find(
       (s) => s.id === request.student_id
     );
     return student?.current_semester === Number(selectedSemester);
   });
 
-  if (componentLoading || sessionLoading) { // Show loading if session is loading or component data is loading
+  if (componentLoading || sessionLoading) {
     return (
       <Card>
         <CardHeader>
@@ -152,7 +188,7 @@ const TutorRequestHistory = () => {
           <TableBody>
             {filteredHistory.length > 0 ? (
               filteredHistory.map((request) => {
-                const student = studentsInCharge.find(
+                const student = allStudentsWithDetails.find(
                   (s) => s.id === request.student_id
                 );
                 return (
